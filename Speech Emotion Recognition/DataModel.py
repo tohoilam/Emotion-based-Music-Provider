@@ -16,7 +16,7 @@ warnings.filterwarnings('ignore')
 
 tz = pytz.timezone('Asia/Hong_Kong')
 
-class DataIEMOCAP:
+class DataModel:
   def __init__(self, labelsToInclude=[], mergeHappinessExcitement=False, splitDuration=8, ignoreDuration=1):
     # Hyperparameter
     self.splitDuration = splitDuration
@@ -24,16 +24,6 @@ class DataIEMOCAP:
     self.dimension = (256, 256)
     self.test_percent = 0.2
     self.validation_percent = 0.2
-    
-    self.labels_dict = {'neu': 'Neutral',
-              'fru': 'Frustration',
-              'ang': 'Anger',
-              'sad': 'Sadness',
-              'hap': 'Happiness',
-              'exc': 'Excitement',
-              'sur': 'Surprise',
-              'dis': 'Disgust',
-              'fea': 'Fear'}
 
     if (labelsToInclude == []):
       self.labels_name = ['Neutral', 'Frustration', 'Anger', 'Sadness', 'Happiness', 'Excitement', 'Surprise', 'Disgust', 'Fear']
@@ -57,22 +47,34 @@ class DataIEMOCAP:
   ### Data Processing Methods ###
   ###############################
   def processData(self):
-    self.extractData()
-    self.melProcessing()
-    self.labelProcessing()
-    self.dataSplit()
+    if (self.data == [] or self.labels == [] or self.sampling_rates == []):
+      print('Please call extractIEMOCAPData() and/or extractEmoDBData() before calling this method!')
+    else:
+      self.melProcessing()
+      self.labelProcessing()
+      self.dataSplit()
     
-    print('Data Processing Completed!')
-    print('  Data shapes:')
-    print(f'    x_train  : {self.x_train.shape}')
-    print(f'    y_train  : {self.y_train.shape}')
-    print(f'    sr_train : {self.sr_train.shape}')
-    print(f'    x_test   : {self.x_test.shape}')
-    print(f'    y_test   : {self.y_test.shape}')
-    print(f'    sr_test  : {self.sr_test.shape}')
-    print('')
+      print('Data Processing Completed!')
+      print('  Data shapes:')
+      print(f'    x_train  : {self.x_train.shape}')
+      print(f'    y_train  : {self.y_train.shape}')
+      print(f'    sr_train : {self.sr_train.shape}')
+      print(f'    x_test   : {self.x_test.shape}')
+      print(f'    y_test   : {self.y_test.shape}')
+      print(f'    sr_test  : {self.sr_test.shape}')
+      print('')
   
-  def extractData(self):
+  def extractIEMOCAPData(self):
+    labels_dict = {'neu': 'Neutral',
+          'fru': 'Frustration',
+          'ang': 'Anger',
+          'sad': 'Sadness',
+          'hap': 'Happiness',
+          'exc': 'Excitement',
+          'sur': 'Surprise',
+          'dis': 'Disgust',
+          'fea': 'Fear'}
+    
     data = []
     labels = []
     sampling_rates = []
@@ -112,8 +114,8 @@ class DataIEMOCAP:
               continue
 
             label_code = line[0].split('\t')[2]
-            if (label_code in self.labels_dict):
-              label = self.labels_dict[label_code]
+            if (label_code in labels_dict):
+              label = labels_dict[label_code]
             else:
               label = 'Other'
             
@@ -129,47 +131,12 @@ class DataIEMOCAP:
             # Load Audio and x
             wav_path = os.path.join(dirname, filename)
 
-            audio = AudioSegment.from_file(wav_path)
-            sr = audio.frame_rate
-
-            # Process Audio
-            audio = effects.normalize(audio, headroom = 5.0) # TODO: Try other head room
-            processed_x = np.array(audio.get_array_of_samples(), dtype = 'float32')
-            processed_x, _ = librosa.effects.trim(processed_x, top_db = 30)
+            # Extract Data
+            tempData, tempLabels, tempSamplingRates = self._extractData(wav_path, label)
             
-            ### Noise reduction is SUPER SLOW
-            # processed_x = nr.reduce_noise(processed_x, sr=sr)
-            
-            # Split at or add padding to splitDuration (hyperparameter)
-            #   if remaining duration is less than 1 sec, remove
-            duration = len(processed_x) / sr
-            size = sr * self.splitDuration
-
-            if (duration < self.splitDuration):
-              processed_x = np.pad(processed_x, (0, size - len(processed_x)), 'constant')
-              
-              data.append(processed_x)
-              labels.append(label)
-              sampling_rates.append(sr)
-            elif (duration > self.splitDuration):
-
-              for j in range(0, len(processed_x), size):
-                splitSection = processed_x[j:j+size]
-
-                # Check if it is longer than ignoreDuration
-                if (len(splitSection) > self.ignoreDuration * sr):
-
-                  # Pad audio that is shorter than splitDuration
-                  if (len(splitSection) < size):
-                    padded_x = np.pad(splitSection, (0, size - len(splitSection)), 'constant')
-                    
-                    data.append(padded_x)
-                    labels.append(label)
-                    sampling_rates.append(sr)
-                  else:
-                    data.append(splitSection)
-                    labels.append(label)
-                    sampling_rates.append(sr)
+            data.extend(tempData)
+            labels.extend(tempLabels)
+            sampling_rates.extend(tempSamplingRates)
 
             count += 1
             if (count % 100 == 0):
@@ -177,17 +144,17 @@ class DataIEMOCAP:
               print('Extracting data...')
               print(f'    Loaded {len(data):4} data')
               
-    self.data = data
-    self.labels = labels
-    self.sampling_rates = sampling_rates
+    self.data.extend(data)
+    self.labels.extend(labels)
+    self.sampling_rates.extend(sampling_rates)
 
     clear_output()
-    label_count = {'Neutral': 0, 'Frustration': 0, 'Anger': 0, 'Sadness': 0, 'Happiness': 0, 'Excitement': 0, 'Surprise': 0, 'Disgust': 0, 'Fear': 0}
+    label_count = {'Neutral': 0, 'Frustration': 0, 'Anger': 0, 'Sadness': 0, 'Happiness': 0, 'Excitement': 0, 'Surprise': 0, 'Disgust': 0, 'Fear': 0, 'Boredom': 0}
     for label in self.labels:
       label_count[label] += 1
     
     print('Data Extration Completed')
-    print('    Number of data:', len(data))
+    print('    Number of data:', len(self.data))
     print(f"      Neutral     : {label_count['Neutral']}")
     print(f"      Frustration : {label_count['Frustration']}")
     print(f"      Anger       : {label_count['Anger']}")
@@ -197,6 +164,7 @@ class DataIEMOCAP:
     print(f"      Surprise    : {label_count['Surprise']}")
     print(f"      Disgust     : {label_count['Disgust']}")
     print(f"      Fear        : {label_count['Fear']}")
+    print(f"      Boredom     : {label_count['Boredom']}")
     
     
 
@@ -207,17 +175,130 @@ class DataIEMOCAP:
     print('')
    
   def extractEmoDBData(self):
+    labels_dict = {'N': 'Neutral',
+          'A': 'Frustration',
+          'W': 'Anger',
+          'T': 'Sadness',
+          'F': 'Happiness',
+          'E': 'Disgust',
+          'L': 'Boredom'}
+    
     data = []
     labels = []
     sampling_rates = []
+    
+    count = 0
     
     data_path = os.path.join(os.getcwd(), 'Data/EmoDB')
     
     for dirname, _, filenames in os.walk(data_path):
       for filename in filenames:
+        
+        if (filename == 'desktop.ini' or filename == 'desktop.in.txt' or filename == '.DS_Store' or filename == '.DS'):
+              continue
+        
+        # Load Label
+        label_code = filename[5]
+        label = labels_dict[label_code]
+        
+        # Filter Labels
+        if (label not in self.labels_name):
+          continue
+        
+        # Load Audio and x
         wav_path = os.path.join(dirname, filename)
+        
+        # Extract Data
+        tempData, tempLabels, tempSamplingRates = self._extractData(wav_path, label)
+        
+        data.extend(tempData)
+        labels.extend(tempLabels)
+        sampling_rates.extend(tempSamplingRates)
+
+        count += 1
+        if (count % 100 == 0):
+          clear_output()
+          print('Extracting data...')
+          print(f'    Loaded {len(data):4} data')
+          
+    self.data.extend(data)
+    self.labels.extend(labels)
+    self.sampling_rates.extend(sampling_rates)
+
+    clear_output()
+    label_count = {'Neutral': 0, 'Frustration': 0, 'Anger': 0, 'Sadness': 0, 'Happiness': 0, 'Excitement': 0, 'Surprise': 0, 'Disgust': 0, 'Fear': 0, 'Boredom': 0}
+    for label in self.labels:
+      label_count[label] += 1
+    
+    print('Data Extration Completed')
+    print('    Number of data:', len(self.data))
+    print(f"      Neutral     : {label_count['Neutral']}")
+    print(f"      Frustration : {label_count['Frustration']}")
+    print(f"      Anger       : {label_count['Anger']}")
+    print(f"      Sadness     : {label_count['Sadness']}")
+    print(f"      Happiness   : {label_count['Happiness']}")
+    print(f"      Excitement  : {label_count['Excitement']}")
+    print(f"      Surprise    : {label_count['Surprise']}")
+    print(f"      Disgust     : {label_count['Disgust']}")
+    print(f"      Fear        : {label_count['Fear']}")
+    print(f"      Boredom     : {label_count['Boredom']}")
+    
     
 
+    for i in range(len(data)):
+      if (len(data[i]) != self.splitDuration * sampling_rates[i]):
+        print(f'    Incorrect found {i:4}: Duration = {len(data[i])}')
+    
+    print('')
+    
+  def _extractData(self, wav_path, label):
+    data = []
+    labels = []
+    sampling_rates = []
+    
+    audio = AudioSegment.from_file(wav_path)
+    sr = audio.frame_rate
+
+    # Process Audio
+    audio = effects.normalize(audio, headroom = 5.0) # TODO: Try other head room
+    processed_x = np.array(audio.get_array_of_samples(), dtype = 'float32')
+    processed_x, _ = librosa.effects.trim(processed_x, top_db = 30)
+    
+    ### Noise reduction is SUPER SLOW
+    # processed_x = nr.reduce_noise(processed_x, sr=sr)
+    
+    # Split at or add padding to splitDuration (hyperparameter)
+    #   if remaining duration is less than 1 sec, remove
+    duration = len(processed_x) / sr
+    size = sr * self.splitDuration
+
+    if (duration < self.splitDuration):
+      processed_x = np.pad(processed_x, (0, size - len(processed_x)), 'constant')
+      
+      data.append(processed_x)
+      labels.append(label)
+      sampling_rates.append(sr)
+    elif (duration > self.splitDuration):
+
+      for j in range(0, len(processed_x), size):
+        splitSection = processed_x[j:j+size]
+
+        # Check if it is longer than ignoreDuration
+        if (len(splitSection) > self.ignoreDuration * sr):
+
+          # Pad audio that is shorter than splitDuration
+          if (len(splitSection) < size):
+            padded_x = np.pad(splitSection, (0, size - len(splitSection)), 'constant')
+            
+            data.append(padded_x)
+            labels.append(label)
+            sampling_rates.append(sr)
+          else:
+            data.append(splitSection)
+            labels.append(label)
+            sampling_rates.append(sr)
+    
+    return data, labels, sampling_rates
     
   def melProcessing(self):
     print('Processing data to Mel Spectrogram...')
@@ -266,6 +347,7 @@ class DataIEMOCAP:
     sr_train = self.sampling_rates[:training_size]
 
     train = list(zip(x_train, y_train, sr_train))
+    np.random.seed(0)
     np.random.shuffle(train)
     
     x_train, y_train, sr_train = zip(*train)
