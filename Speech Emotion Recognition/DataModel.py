@@ -8,6 +8,7 @@ from IPython.display import clear_output
 import matplotlib.pyplot as plt
 import pytz
 import cv2
+import random
 
 from sklearn.preprocessing import LabelEncoder
 
@@ -65,6 +66,8 @@ class DataModel:
       print('')
   
   def extractIEMOCAPData(self):
+    print('Loading and Extracting IEMOCAP Data...')
+    
     labels_dict = {'neu': 'Neutral',
           'fru': 'Frustration',
           'ang': 'Anger',
@@ -132,28 +135,27 @@ class DataModel:
             wav_path = os.path.join(dirname, filename)
 
             # Extract Data
-            tempData, tempLabels, tempSamplingRates = self._extractData(wav_path, label)
+            tempData, tempSamplingRates = self._extractData(wav_path)
             
-            data.extend(tempData)
-            labels.extend(tempLabels)
-            sampling_rates.extend(tempSamplingRates)
+            data.append(tempData)
+            labels.append(label)
+            sampling_rates.append(tempSamplingRates)
 
             count += 1
             if (count % 100 == 0):
-              clear_output()
-              print('Extracting data...')
-              print(f'    Loaded {len(data):4} data')
+              print(f'    Loaded and Extracted {len(data):5} data', end='\r')
+     
+    print(f'    Loaded and Extracted {len(data):5} data')
               
     self.data.extend(data)
     self.labels.extend(labels)
     self.sampling_rates.extend(sampling_rates)
 
-    clear_output()
     label_count = {'Neutral': 0, 'Frustration': 0, 'Anger': 0, 'Sadness': 0, 'Happiness': 0, 'Excitement': 0, 'Surprise': 0, 'Disgust': 0, 'Fear': 0, 'Boredom': 0}
     for label in self.labels:
       label_count[label] += 1
     
-    print('Data Extration Completed')
+    print('\nData Extration Completed')
     print('    Number of data:', len(self.data))
     print(f"      Neutral     : {label_count['Neutral']}")
     print(f"      Frustration : {label_count['Frustration']}")
@@ -165,16 +167,11 @@ class DataModel:
     print(f"      Disgust     : {label_count['Disgust']}")
     print(f"      Fear        : {label_count['Fear']}")
     print(f"      Boredom     : {label_count['Boredom']}")
-    
-    
-
-    for i in range(len(data)):
-      if (len(data[i]) != self.splitDuration * sampling_rates[i]):
-        print(f'    Incorrect found {i:4}: Duration = {len(data[i])}')
-    
     print('')
    
   def extractEmoDBData(self):
+    print('Loading and Extracting EmoDB Data...')
+    
     labels_dict = {'N': 'Neutral',
           'A': 'Frustration',
           'W': 'Anger',
@@ -209,28 +206,27 @@ class DataModel:
         wav_path = os.path.join(dirname, filename)
         
         # Extract Data
-        tempData, tempLabels, tempSamplingRates = self._extractData(wav_path, label)
+        tempData, tempSamplingRates = self._extractData(wav_path)
         
-        data.extend(tempData)
-        labels.extend(tempLabels)
-        sampling_rates.extend(tempSamplingRates)
+        data.append(tempData)
+        labels.append(label)
+        sampling_rates.append(tempSamplingRates)
 
         count += 1
         if (count % 100 == 0):
-          clear_output()
-          print('Extracting data...')
-          print(f'    Loaded {len(data):4} data')
+          print(f'    Loaded and Extracted {len(data):5} data', end='\r')
           
+    print(f'    Loaded and Extracted {len(data):5} data')
+              
     self.data.extend(data)
     self.labels.extend(labels)
     self.sampling_rates.extend(sampling_rates)
 
-    clear_output()
     label_count = {'Neutral': 0, 'Frustration': 0, 'Anger': 0, 'Sadness': 0, 'Happiness': 0, 'Excitement': 0, 'Surprise': 0, 'Disgust': 0, 'Fear': 0, 'Boredom': 0}
     for label in self.labels:
       label_count[label] += 1
     
-    print('Data Extration Completed')
+    print('\nData Extration Completed')
     print('    Number of data:', len(self.data))
     print(f"      Neutral     : {label_count['Neutral']}")
     print(f"      Frustration : {label_count['Frustration']}")
@@ -242,20 +238,9 @@ class DataModel:
     print(f"      Disgust     : {label_count['Disgust']}")
     print(f"      Fear        : {label_count['Fear']}")
     print(f"      Boredom     : {label_count['Boredom']}")
-    
-    
-
-    for i in range(len(data)):
-      if (len(data[i]) != self.splitDuration * sampling_rates[i]):
-        print(f'    Incorrect found {i:4}: Duration = {len(data[i])}')
-    
     print('')
     
-  def _extractData(self, wav_path, label):
-    data = []
-    labels = []
-    sampling_rates = []
-    
+  def _extractData(self, wav_path):
     audio = AudioSegment.from_file(wav_path)
     sr = audio.frame_rate
 
@@ -267,42 +252,167 @@ class DataModel:
     ### Noise reduction is SUPER SLOW
     # processed_x = nr.reduce_noise(processed_x, sr=sr)
     
-    # Split at or add padding to splitDuration (hyperparameter)
-    #   if remaining duration is less than 1 sec, remove
-    duration = len(processed_x) / sr
-    size = sr * self.splitDuration
-
-    if (duration < self.splitDuration):
-      processed_x = np.pad(processed_x, (0, size - len(processed_x)), 'constant')
-      
-      data.append(processed_x)
-      labels.append(label)
-      sampling_rates.append(sr)
-    elif (duration > self.splitDuration):
-
-      for j in range(0, len(processed_x), size):
-        splitSection = processed_x[j:j+size]
-
-        # Check if it is longer than ignoreDuration
-        if (len(splitSection) > self.ignoreDuration * sr):
-
-          # Pad audio that is shorter than splitDuration
-          if (len(splitSection) < size):
-            padded_x = np.pad(splitSection, (0, size - len(splitSection)), 'constant')
-            
-            data.append(padded_x)
-            labels.append(label)
-            sampling_rates.append(sr)
-          else:
-            data.append(splitSection)
-            labels.append(label)
-            sampling_rates.append(sr)
+    return processed_x, sr
+  
+  def dataAugmentation(self, multiply, pitchScaleSemitonesOffset=0.0, timeStretchOffset=0.0, randomGainOffset=0.0, addNoiseMaxFactor=0.0):
+    if (multiply < 2):
+      raise ValueError("Multiply parameter should be integer bigger than 1")
     
-    return data, labels, sampling_rates
+    if (pitchScaleSemitonesOffset == 0 and
+        timeStretchOffset == 0 and
+        randomGainOffset == 0 and
+        addNoiseMaxFactor == 0):
+      raise AttributeError("Must have some data augmentation configuration. Please set some optional arguments!")
+    
+    if (pitchScaleSemitonesOffset < 0):
+      raise ValueError("Pitch scale semitones offset should be a positive number or zero. Offset of 0 means no pitch scale.")
+
+    if (timeStretchOffset < 0):
+      raise ValueError("Time stretch offset should be a positive number or zero. Offset of 0 means no time stretch.")
+
+    if (timeStretchOffset >= 1):
+      raise ValueError("Time stretch offset should be less than 1. Offset of 0 means no time stretch.")
+    
+    if (randomGainOffset < 0):
+      raise ValueError("Random gain offset should be a positive number or zero. Offset of 0 means no random gain.")
+
+    if (randomGainOffset >= 1):
+      raise ValueError("Random gain offset should be less than 1. Offset of 0 means no random gain.")
+    
+    if (addNoiseMaxFactor < 0):
+      raise ValueError("Noise factor should be positive number or zero. No noise means a value of 0.")
+    
+    print('Executing Data Augmentation Process...')
+    
+    extraAugmentedData = []
+    extraAugmentedLabels = []
+    extraAugmentedSR = []
+    
+    random.seed(None)
+    
+    for loopCount in range(multiply - 1):
+      for i, x in enumerate(self.data):
+        label = self.labels[i]
+        sr = self.sampling_rates[i]
+        
+        # Pitch Scale (-3 to 3)
+        if (pitchScaleSemitonesOffset != 0):
+          pitchScaleSemitones = random.uniform(-pitchScaleSemitonesOffset, pitchScaleSemitonesOffset)
+          x = self._pitchScale(x, sr, pitchScaleSemitones)
+
+        # Time Stretch (0.8 to 1.2)
+        if (timeStretchOffset != 0):
+          timeStretchRate = random.uniform(1 - timeStretchOffset, 1 + timeStretchOffset)
+          x = self._timeStretch(x, timeStretchRate)
+        
+        # Random Gain (0.8 to 1.2)
+        if (randomGainOffset != 0):
+          gainFactor = random.uniform(1 - randomGainOffset, 1 + randomGainOffset)
+          x = self._randomGain(x, gainFactor)
+        
+        # Add Noise (0 to 0.2)
+        if (addNoiseMaxFactor != 0):
+          addNoiseFactor = random.uniform(0, addNoiseMaxFactor)
+          x = self._addNoise(x, addNoiseFactor)
+        
+        extraAugmentedData.append(x)
+        extraAugmentedLabels.append(label)
+        extraAugmentedSR.append(sr)
+        
+        if (i != 0 and (i + 1) % 100 == 0):
+          if (loopCount == 0):
+            print(f"    Processed {i+1:5} data                                     ", end='\r')
+          else:
+            print(f"    Processed {i+1:5} data (Increased dataset size by {loopCount + 2:2}) times", end='\r')
+    
+    print(f"    Processed {len(self.data):5} data (Increased dataset size by {multiply:2}) times")
+        
+    self.data.extend(extraAugmentedData)
+    self.labels.extend(extraAugmentedLabels)
+    self.sampling_rates.extend(extraAugmentedSR)
+    
+    print('Data Augmentation Completed!')
+    print('')
+          
+  def _pitchScale(self, x, sr, num_semitones):
+    # Num of Semitones = positive or negative number, don't have to be integer
+    # Positive number = scale go up
+    # Negative number = scale do down
+    # Ex. +1 semitones means go from C to D
+    # Ex. -2 semitones means go from E to C
+    return librosa.effects.pitch_shift(x, sr, num_semitones)
+
+  def _timeStretch(self, x, stretch_rate):
+    return librosa.effects.time_stretch(x, stretch_rate)
+
+  def _randomGain(self, x, gain_factor):
+    return x * gain_factor
+
+  def _addNoise(self, x, noise_factor):
+    noise = np.random.normal(0, x.std(), x.size) * noise_factor
+    return x + noise
     
   def melProcessing(self):
+    print('Split or Add Padding to data:')
+    print(f"    Split Duration  : {self.splitDuration}")
+    print(f"    Ignore Duration : {self.ignoreDuration}")
+    print('Processing...')
+    
+    # Splitting and Padding Data
+    # Split at or add padding to splitDuration (hyperparameter)
+    #   if remaining duration is less than 1 sec, remove
+    data = []
+    labels = []
+    sampling_rates = []
+    
+    for index, processed_x in enumerate(self.data):
+      label = self.labels[index]
+      sr = self.sampling_rates[index]
+      
+      duration = len(processed_x) / sr
+      size = sr * self.splitDuration
+
+      if (duration < self.splitDuration):
+        processed_x = np.pad(processed_x, (0, size - len(processed_x)), 'constant')
+        
+        data.append(processed_x)
+        labels.append(label)
+        sampling_rates.append(sr)
+      elif (duration > self.splitDuration):
+
+        for j in range(0, len(processed_x), size):
+          splitSection = processed_x[j:j+size]
+
+          # Check if it is longer than ignoreDuration
+          if (len(splitSection) > self.ignoreDuration * sr):
+
+            # Pad audio that is shorter than splitDuration
+            if (len(splitSection) < size):
+              padded_x = np.pad(splitSection, (0, size - len(splitSection)), 'constant')
+              
+              data.append(padded_x)
+              labels.append(label)
+              sampling_rates.append(sr)
+            else:
+              data.append(splitSection)
+              labels.append(label)
+              sampling_rates.append(sr)
+      
+      if (index != 0 and (index + 1) % 100 == 0):
+        print(f'    Processed {len(data):5} data split and padding', end='\r')
+      
+    self.data = data
+    self.labels = labels
+    self.sampling_rates = sampling_rates
+    
+    print(f'    Processed {len(data):5} data split and padding')
+    print('Data Splitting and Padding Completed!')
+    print('')
+    
+    
     print('Processing data to Mel Spectrogram...')
     
+    # Convert to Mel-Spectrogram
     x_images = []
 
     for i, x in enumerate(self.data):
@@ -314,6 +424,11 @@ class DataModel:
       mel_spec = cv2.resize(mel_spec, self.dimension, interpolation=cv2.INTER_CUBIC)
 
       x_images.append(mel_spec)
+      
+      if (i != 0 and (i + 1) % 100 == 0):
+        print(f"    Processed {i+1:5} Mel Spectrogram", end='\r')
+
+    print(f"    Processed {len(self.x_images):5} Mel Spectrogram")
 
     x_images = [ x for x in x_images ]
     x_images = np.asarray(x_images)
@@ -360,7 +475,7 @@ class DataModel:
     self.y_test = np.asarray(self.labels[training_size:])
     self.sr_test = np.asarray(self.sampling_rates[training_size:])
 
-    print('Data Split Completed')
+    print('Train Test Split Completed')
     print('')
 
   #############################
