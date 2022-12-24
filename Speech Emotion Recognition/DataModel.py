@@ -24,7 +24,7 @@ class DataModel:
     self.ignoreDuration = ignoreDuration
     self.dimension = (256, 256)
     self.test_percent = 0.2
-    self.test_amount = 2000
+    self.test_amount = 1500
     self.validation_percent = 0.2
 
     if (labelsToInclude == []):
@@ -37,7 +37,9 @@ class DataModel:
     self.data = []
     self.labels = []
     self.sampling_rates = []
-    self.x_images = []
+    self.test_data = []
+    self.test_labels = []
+    self.test_sampling_rates = []
     self.x_train = None
     self.y_train = None
     self.sr_train = None
@@ -52,15 +54,55 @@ class DataModel:
     if (self.data == [] or self.labels == [] or self.sampling_rates == []):
       print('Please call extractIEMOCAPData() and/or extractEmoDBData() before calling this method!')
     else:
+      # Call data split if it is not callen (by data augmentation) before
+      if (self.test_data == [] or self.test_labels == [] or self.test_sampling_rates == []):
+        self.dataSplit()
+      
+      # Process Training Data
       self.melProcessing()
       self.labelProcessing()
-      self.dataSplit()
+      
+      # Process Testing Data
+      self.melProcessing(testing=True)
+      self.labelProcessing(testing=True)
+      
+      # Assign Data
+      self.x_train = self.data
+      self.y_train = self.labels
+      self.sr_train = self.sampling_rates
+      self.x_test = self.test_data
+      self.y_test = self.test_labels
+      self.sr_test = self.test_sampling_rates
     
       print('Data Processing Completed!')
       print('  Data shapes:')
       print(f'    x_train  : {self.x_train.shape}')
       print(f'    y_train  : {self.y_train.shape}')
       print(f'    sr_train : {self.sr_train.shape}')
+      print(f'    x_test   : {self.x_test.shape}')
+      print(f'    y_test   : {self.y_test.shape}')
+      print(f'    sr_test  : {self.sr_test.shape}')
+      print('')
+  
+  def processTestingDataOnly(self):
+    if (self.data == [] or self.labels == [] or self.sampling_rates == []):
+      print('Please call extractIEMOCAPData() and/or extractEmoDBData() before calling this method!')
+    else:
+      # Call data split if it is not callen (by data augmentation) before
+      if (self.test_data == [] or self.test_labels == [] or self.test_sampling_rates == []):
+        self.dataSplit()
+      
+      # Process Testing Data
+      self.melProcessing(testing=True)
+      self.labelProcessing(testing=True)
+      
+      # Assign Data
+      self.x_test = self.test_data
+      self.y_test = self.test_labels
+      self.sr_test = self.test_sampling_rates
+    
+      print('Data Processing Completed!')
+      print('  Data shapes:')
       print(f'    x_test   : {self.x_test.shape}')
       print(f'    y_test   : {self.y_test.shape}')
       print(f'    sr_test  : {self.sr_test.shape}')
@@ -283,6 +325,10 @@ class DataModel:
     if (addNoiseMaxFactor < 0):
       raise ValueError("Noise factor should be positive number or zero. No noise means a value of 0.")
     
+    # Execute Data Split
+    self.dataSplit()
+    # End Data Split
+    
     print('Executing Data Augmentation Process...')
     
     extraAugmentedData = []
@@ -353,11 +399,23 @@ class DataModel:
     noise = np.random.normal(0, x.std(), x.size) * noise_factor
     return x + noise
     
-  def melProcessing(self):
-    print('Split or Add Padding to data:')
+  def melProcessing(self, testing=False):
+    if (not testing):
+      print('Split or Add Padding for training data:')
+    else:
+      print('Split or Add Padding for testing data')
     print(f"    Split Duration  : {self.splitDuration}")
     print(f"    Ignore Duration : {self.ignoreDuration}")
     print('Processing...')
+    
+    if (not testing):
+      thisData = self.data
+      thisLabels = self.labels
+      thisSR = self.sampling_rates
+    else:
+      thisData = self.test_data
+      thisLabels = self.test_labels
+      thisSR = self.test_sampling_rates
     
     # Splitting and Padding Data
     # Split at or add padding to splitDuration (hyperparameter)
@@ -366,9 +424,19 @@ class DataModel:
     labels = []
     sampling_rates = []
     
-    for index, processed_x in enumerate(self.data):
-      label = self.labels[index]
-      sr = self.sampling_rates[index]
+    for index, processed_x in enumerate(thisData):
+      label = thisLabels[index]
+      sr = thisSR[index]
+      
+      # Clear up memory:
+      if (not testing):
+        self.data = None
+        self.labels = None
+        self.sampling_rates = None
+      else:
+        self.test_data = None
+        self.test_labels = None
+        self.test_sampling_rates = None
       
       duration = len(processed_x) / sr
       size = sr * self.splitDuration
@@ -401,101 +469,159 @@ class DataModel:
       
       if (index != 0 and (index + 1) % 100 == 0):
         print(f'    Processed {len(data):5} data split and padding', end='\r')
-      
-    self.data = data
-    self.labels = labels
-    self.sampling_rates = sampling_rates
     
-    print(f'    Processed {len(self.data):5} data split and padding')
-    print('Data Splitting and Padding Completed!')
+    if (not testing):
+      self.data = data
+      self.labels = labels
+      self.sampling_rates = sampling_rates
+      
+      print(f'    Processed {len(self.data):5} data split and padding')
+      print('Data Splitting and Padding For Training Completed!')
+    else:
+      self.test_data = data
+      self.test_labels = labels
+      self.test_sampling_rates = sampling_rates
+      
+      print(f'    Processed {len(self.test_data):5} data split and padding')
+      print('Data Splitting and Padding For Testing Completed!')
+    
+    thisData = data
+    thisLabels = labels
+    thisSR = sampling_rates
+      
     print('')
     
-    
-    print('Processing data to Mel Spectrogram...')
+    if (not testing):
+      print('Processing training data to Mel Spectrogram...')
+    else:
+      print('Processing testing data to Mel Spectrogram...')
     
     # Convert to Mel-Spectrogram
     x_images = []
 
-    for i, x in enumerate(self.data):
+    for i, x in enumerate(thisData):
       # Extract Mel-Sectrogram
-      mel_spec = librosa.feature.melspectrogram(y=x, sr=self.sampling_rates[i])
+      mel_spec = librosa.feature.melspectrogram(y=x, sr=thisSR[i])
       mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.min)
 
       # Resize Mel-Spectrogram
       mel_spec = cv2.resize(mel_spec, self.dimension, interpolation=cv2.INTER_CUBIC)
       
-      # Free up memory from self.data and self.sampling_rates
-      self.data[i] = None
-      self.sampling_rates[i] = None
+      # Free up memory from data
+      thisData[i] = None
 
       x_images.append(mel_spec)
       
       if (i != 0 and (i + 1) % 100 == 0):
         print(f"    Processed {i+1:5} Mel Spectrogram", end='\r')
 
-    print(f"    Processed {len(self.x_images):5} Mel Spectrogram")
+    print(f"    Processed {len(x_images):5} Mel Spectrogram")
 
     x_images = [ x for x in x_images ]
     x_images = np.asarray(x_images)
     x_images = x_images.reshape(x_images.shape[0], x_images.shape[1], x_images.shape[2], 1)
-    self.x_images = x_images
-
-    print('Mel Spectrogram Processing Completed')
-    print('    Shape of images:', self.x_images.shape)
+    thisData = x_images
+    
+    if (not testing):
+      self.data = np.asarray(thisData)
+      
+      print('Mel Spectrogram Processing For Training Completed')
+      print('    Shape of training images:', self.data.shape)
+    else:
+      self.test_data = np.asarray(thisData)
+      
+      print('Mel Spectrogram Processing For Testing Completed')
+      print('    Shape of testing images:', self.test_data.shape)
+      
     print('')
   
-  def labelProcessing(self):
-    print('Processing labels...')
+  def labelProcessing(self, testing=False):
+    if (not testing):
+      print('Processing training labels...')
+      
+      # Label Encoding
+      encoder = LabelEncoder()
+      encoder.fit(self.labels_name)
+      self.labels = encoder.transform(self.labels)
+      self.sampling_rates = np.asarray(self.sampling_rates)
+      
+      print('Label Processing For Training Completed')
+    else:
+      print('Processing testing labels...')
+      
+      # Label Encoding
+      encoder = LabelEncoder()
+      encoder.fit(self.labels_name)
+      self.test_labels = np.asarray(encoder.transform(self.test_labels))
+      self.test_sampling_rates = np.asarray(self.test_sampling_rates)
     
-    # Label Encoding
-    encoder = LabelEncoder()
-    encoder.fit(self.labels_name)
-    self.labels = encoder.transform(self.labels)
-    self.sampling_rates = np.asarray(self.sampling_rates)
+      print('Label Processing For Testing Completed')
     
-    print('Label Processing Completed')
     print('')
  
   def dataSplit(self):
     print('Splitting data...')
     
-    # test_size = np.floor(len(self.x_images) * self.test_percent).astype(int)
-    test_size = self.test_amount
-    training_size = len(self.x_images) - test_size
+    # test_amount if percentage of test_amount / self.data is less than test_percent
+    if (len(self.data) > self.test_amount * (1/self.test_percent)):
+      test_size = self.test_amount
+    else:
+      test_size = np.floor(len(self.data) * self.test_percent).astype(int)
+    training_size = len(self.data) - test_size
+    
+    zippedData = list(zip(self.data, self.labels, self.sampling_rates))
+    
+    np.random.seed(0)
+    np.random.shuffle(zippedData)
+    
+    self.data, self.labels, self.sampling_rates = zip(*zippedData)
+    del zippedData[:]
+    
+    self.test_data = list(self.data[training_size:])
+    self.test_labels = list(self.labels[training_size:])
+    self.test_sampling_rates = list(self.sampling_rates[training_size:])
+    self.data = list(self.data[:training_size])
+    self.labels = list(self.labels[:training_size])
+    self.sampling_rates = list(self.sampling_rates[:training_size])
+    
+    print('Train Test Split Completed')
+    print(f"    Training Size : {len(self.data)}")
+    print(f"    Testing Size  : {len(self.test_data)}")
+    print('')
 
-    # Take training data and shuffle
-    x_train = self.x_images[:training_size]
-    y_train = self.labels[:training_size]
-    sr_train = self.sampling_rates[:training_size]
-    x_test = self.x_images[training_size:]
-    y_test = self.labels[training_size:]
-    sr_test = self.sampling_rates[training_size:]
+    # # Take training data and shuffle
+    # x_train = self.x_images[:training_size]
+    # y_train = self.labels[:training_size]
+    # sr_train = self.sampling_rates[:training_size]
+    # x_test = self.x_images[training_size:]
+    # y_test = self.labels[training_size:]
+    # sr_test = self.sampling_rates[training_size:]
 
-    train = list(zip(x_train, y_train, sr_train))
+    # train = list(zip(x_train, y_train, sr_train))
     # for i in range(training_size):
     #   self.x_images[i] = None
     
-    np.delete(self.x_images, np.s_[:training_size], 0)
-    np.delete(self.labels, np.s_[:training_size], 0)
-    np.delete(self.sampling_rates, np.s_[:training_size], 0)
+    # np.delete(self.x_images, np.s_[:training_size], 0)
+    # np.delete(self.labels, np.s_[:training_size], 0)
+    # np.delete(self.sampling_rates, np.s_[:training_size], 0)
     
-    np.random.seed(0)
-    np.random.shuffle(train)
+    # np.random.seed(0)
+    # np.random.shuffle(train)
     
-    x_train, y_train, sr_train = zip(*train)
-    del train[:]
+    # x_train, y_train, sr_train = zip(*train)
+    # del train[:]
     
-    self.x_train = np.asarray(x_train)
-    self.y_train = np.asarray(y_train)
-    self.sr_train = np.asarray(sr_train)
+    # self.x_train = np.asarray(x_train)
+    # self.y_train = np.asarray(y_train)
+    # self.sr_train = np.asarray(sr_train)
 
-    # Take test data
-    self.x_test = np.asarray(x_test)
-    self.y_test = np.asarray(y_test)
-    self.sr_test = np.asarray(sr_test)
+    # # Take test data
+    # self.x_test = np.asarray(x_test)
+    # self.y_test = np.asarray(y_test)
+    # self.sr_test = np.asarray(sr_test)
 
-    print('Train Test Split Completed')
-    print('')
+    # print('Train Test Split Completed')
+    # print('')
 
   #############################
   ### Visualization Methods ###
