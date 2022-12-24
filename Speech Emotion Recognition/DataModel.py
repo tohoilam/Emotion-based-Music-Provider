@@ -24,6 +24,7 @@ class DataModel:
     self.ignoreDuration = ignoreDuration
     self.dimension = (256, 256)
     self.test_percent = 0.2
+    self.test_amount = 2000
     self.validation_percent = 0.2
 
     if (labelsToInclude == []):
@@ -323,9 +324,9 @@ class DataModel:
           if (loopCount == 0):
             print(f"    Processed {i+1:5} data                                     ", end='\r')
           else:
-            print(f"    Processed {i+1:5} data (Increased dataset size by {loopCount + 2:2}) times", end='\r')
+            print(f"    Processed {i+1:5} data (Increased dataset size by {loopCount + 1:2} times)", end='\r')
     
-    print(f"    Processed {len(self.data):5} data (Increased dataset size by {multiply:2}) times")
+    print(f"    Processed {len(self.data):5} data (Increased dataset size by {multiply:2} times)")
         
     self.data.extend(extraAugmentedData)
     self.labels.extend(extraAugmentedLabels)
@@ -405,7 +406,7 @@ class DataModel:
     self.labels = labels
     self.sampling_rates = sampling_rates
     
-    print(f'    Processed {len(data):5} data split and padding')
+    print(f'    Processed {len(self.data):5} data split and padding')
     print('Data Splitting and Padding Completed!')
     print('')
     
@@ -422,6 +423,10 @@ class DataModel:
 
       # Resize Mel-Spectrogram
       mel_spec = cv2.resize(mel_spec, self.dimension, interpolation=cv2.INTER_CUBIC)
+      
+      # Free up memory from self.data and self.sampling_rates
+      self.data[i] = None
+      self.sampling_rates[i] = None
 
       x_images.append(mel_spec)
       
@@ -446,6 +451,7 @@ class DataModel:
     encoder = LabelEncoder()
     encoder.fit(self.labels_name)
     self.labels = encoder.transform(self.labels)
+    self.sampling_rates = np.asarray(self.sampling_rates)
     
     print('Label Processing Completed')
     print('')
@@ -453,27 +459,40 @@ class DataModel:
   def dataSplit(self):
     print('Splitting data...')
     
-    test_size = np.floor(len(self.x_images) * self.test_percent).astype(int)
+    # test_size = np.floor(len(self.x_images) * self.test_percent).astype(int)
+    test_size = self.test_amount
     training_size = len(self.x_images) - test_size
 
     # Take training data and shuffle
     x_train = self.x_images[:training_size]
     y_train = self.labels[:training_size]
     sr_train = self.sampling_rates[:training_size]
+    x_test = self.x_images[training_size:]
+    y_test = self.labels[training_size:]
+    sr_test = self.sampling_rates[training_size:]
 
     train = list(zip(x_train, y_train, sr_train))
+    # for i in range(training_size):
+    #   self.x_images[i] = None
+    
+    np.delete(self.x_images, np.s_[:training_size], 0)
+    np.delete(self.labels, np.s_[:training_size], 0)
+    np.delete(self.sampling_rates, np.s_[:training_size], 0)
+    
     np.random.seed(0)
     np.random.shuffle(train)
     
     x_train, y_train, sr_train = zip(*train)
+    del train[:]
+    
     self.x_train = np.asarray(x_train)
     self.y_train = np.asarray(y_train)
     self.sr_train = np.asarray(sr_train)
 
     # Take test data
-    self.x_test = np.asarray(self.x_images[training_size:])
-    self.y_test = np.asarray(self.labels[training_size:])
-    self.sr_test = np.asarray(self.sampling_rates[training_size:])
+    self.x_test = np.asarray(x_test)
+    self.y_test = np.asarray(y_test)
+    self.sr_test = np.asarray(sr_test)
 
     print('Train Test Split Completed')
     print('')
