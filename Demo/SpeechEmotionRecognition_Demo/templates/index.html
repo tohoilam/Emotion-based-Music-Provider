@@ -11,6 +11,10 @@
   <script src="https://markjivko.com/dist/recorder.js"></script>
   <script>
     jQuery(document).ready(function () {
+
+      listAudioData = []
+      listSR = []
+
       var $ = jQuery;
       var myRecorder = {
         objects: {
@@ -36,7 +40,7 @@
             myRecorder.objects.recorder.record();
           }).catch(function (err) {});
         },
-        stop: function (listObject) {
+        stop: function (listObject, listAudioData, listSR) {
           if (null !== myRecorder.objects.stream) {
             myRecorder.objects.stream.getAudioTracks()[0].stop();
           }
@@ -48,7 +52,7 @@
                 && 'object' === typeof listObject
                 && listObject.length > 0) {
               // Export the WAV file
-              myRecorder.objects.recorder.exportWAV(function (blob) {
+              myRecorder.objects.recorder.exportWAV((blob) => {
                 var url = (window.URL || window.webkitURL)
                         .createObjectURL(blob);
 
@@ -64,10 +68,48 @@
                 // Wrap everything in a row
                 var holderObject = $('<div class="row"></div>')
                         .append(audioObject)
-                        .append(downloadObject);
+                        .append(downloadObject)
+                        .append(getAudioObject);
 
-                // Append to the list
+
+                // Append to the list of audio to predict
                 listObject.append(holderObject);
+
+                // Bug: Can't load audio data after puttint it out to 
+                try {
+                  context = new AudioContext();
+                  var audioBuffer = null;
+
+                  var request = new XMLHttpRequest();
+                  request.open('GET', url, true);
+                  request.responseType = 'arraybuffer';
+
+                  // Decode asynchronously
+                  request.onload = () => {
+                    context.decodeAudioData(request.response,
+                      (buffer) => {
+                        audioBuffer = buffer;
+                        console.log("Duration: " + audioBuffer.duration)
+                        console.log("Length: " + audioBuffer.length)
+                        console.log("Channels: " + audioBuffer.numberOfChannels)
+                        console.log("SR: " + audioBuffer.sampleRate)
+                        console.log(audioBuffer.getChannelData(0))
+                        console.log(audioBuffer)
+
+                        listAudioData.push(audioBuffer.getChannelData(0))
+                        listSR.push(audioBuffer.sampleRate)
+                        
+                      },
+                      (err) => {
+                        console.error(`Error with decoding audio data: ${err.err}`)
+                      } 
+                    );
+                  }
+                  request.send();
+                }
+                catch(e) {
+                  alert('Web Audio API is not supported in this browser');
+                }
               });
             }
           }
@@ -78,7 +120,7 @@
       var listObject = $('[data-role="recordings"]');
 
       // Prepare the record button
-      $('[data-role="controls"] > button').click(function () {
+      $('[data-role="controls"] > button').click(() => {
         // Initialize the recorder
         myRecorder.init();
 
@@ -91,9 +133,15 @@
           myRecorder.start();
         } else {
           $(this).attr('data-recording', '');
-          myRecorder.stop(listObject);
+          myRecorder.stop(listObject, listAudioData, listSR);
         }
       });
+
+      // Console Log Audio Data LIst
+      $('[data-role="predict_emotion_button"]').click(() => {
+        console.log(listAudioData)
+        console.log(listSR)
+      })
     });
   </script>
 </head>
@@ -107,9 +155,10 @@
   <h4>{{ prediction_text }}</h4>
   <div class="holder">
     <div data-role="controls">
-      <button data-recording="true">Record</button>
+      <button data-recording="">Record</button>
     </div>
     <div data-role="recordings"></div>
   </div>
+  <button data-role="predict_emotion_button">Predict Emotion Button</button>
 </body>
 </html>
