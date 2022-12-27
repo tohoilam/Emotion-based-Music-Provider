@@ -218,7 +218,7 @@ class SERModel:
     
 #     return model
 
-  #   # CNN LSTM Baseline
+  # CNN LSTM Baseline (From CNN Model A with BN in middle and Extra Conv2D at the end to reduce it to size of (1x1))
   def cnnLstmModelA(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)), # 62, 62, 120
@@ -239,7 +239,7 @@ class SERModel:
     
     return model
 
-  #   # CNN LSTM Baseline
+  # CNN LSTM Baseline 2 (From CNN Model A with BN in middle and extra LSTM)
   def cnnLstmModelB(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)), # 62, 62, 120
@@ -259,7 +259,7 @@ class SERModel:
     
     return model
 
-  #   # CNN LSTM Baseline
+  # CNN LSTM Baseline 3 (From CNN Model A with BN in middle and extra LSTM and Dense)
   def cnnLstmModelC(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)), # 62, 62, 120
