@@ -11,7 +11,7 @@ tz = pytz.timezone('Asia/Hong_Kong')
 
 # ( (D + 2 * padding - K) / stride ) + 1
 
-class CNNModel:
+class SERModel:
   def __init__(self, modelName, experimentName, ySize=9, learning_rate=0.0001, decay=0.001):
     self.experimentName = datetime.now(tz=tz).strftime("%m-%d %Hh%Mm%Ss ") + experimentName
 
@@ -20,27 +20,27 @@ class CNNModel:
     
     self.ySize = ySize
     
-    if (modelName == "modelA"):
-      model = self.modelA()
-    elif (modelName == "modelB"):
-      model = self.modelB()
-    elif (modelName == "modelC"):
-      model = self.modelC()
-    elif (modelName == "modelD"):
-      model = self.modelD()
-    elif (modelName == "modelE"):
-      model = self.modelE()
-    elif (modelName == "modelF"):
-      model = self.modelF()
-    elif (modelName == "modelG"):
-      model = self.modelG()
-    elif (modelName == "modelH"):
-      model = self.modelH()
-    elif (modelName == "modelI"):
-      model = self.modelI()
+    if (modelName.upper() == "cnnModelA".upper()):
+      model = self.cnnModelA()
+    elif (modelName.upper() == "cnnModelB".upper()):
+      model = self.cnnModelB()
+    elif (modelName.upper() == "cnnModelC".upper()):
+      model = self.cnnModelC()
+    elif (modelName.upper() == "cnnModelD".upper()):
+      model = self.cnnModelD()
+    elif (modelName.upper() == "cnnModelE".upper()):
+      model = self.cnnModelE()
+    elif (modelName.upper() == "cnnLstmModelA".upper()):
+      model = self.cnnLstmModelA()
+    elif (modelName.upper() == "cnnLstmModelB".upper()):
+      model = self.cnnLstmModelB()
+    elif (modelName.upper() == "cnnLstmModelC".upper()):
+      model = self.cnnLstmModelC()
+    elif (modelName.upper() == "cnnLstmModelD".upper()):
+      model = self.cnnLstmModelD()
     else:
       model = None
-      raise NameError("modelName does not exist. Should be modelA, modelB, modelC, modelD, modelE, modelF, modelG, modelH, or modelI")
+      raise NameError("modelName does not exist. Should be cnnModel{A-E} or cnnLstmModel{A-D}")
     
     self.tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=self.logDir)
     
@@ -92,8 +92,12 @@ class CNNModel:
     
     return history
   
+  ###################################################################################################################
+  #################################################### CNN Model ####################################################
+  ###################################################################################################################
+  
   # Baseline Model
-  def modelA(self):
+  def cnnModelA(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)),
       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
@@ -112,7 +116,7 @@ class CNNModel:
     return model
   
   # Removed last layer of Conv2D and MaxPooling2D
-  def modelB(self):
+  def cnnModelB(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)),
       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
@@ -129,7 +133,7 @@ class CNNModel:
     return model
   
   # More Dropout
-  def modelC(self):
+  def cnnModelC(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)),
       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
@@ -148,7 +152,7 @@ class CNNModel:
     return model
   
   # L1 Regularization
-  def modelD(self):
+  def cnnModelD(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)),
       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
@@ -167,7 +171,7 @@ class CNNModel:
     return model
   
   # Add 1 Dense and Dropout each
-  def modelE(self):
+  def cnnModelE(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)),
       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
@@ -187,55 +191,25 @@ class CNNModel:
     
     return model
   
-#   # CNN LSTM Baseline
-#   def modelF(self):
-#     model = tf.keras.Sequential([
-#       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)),
-#       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
-#       tf.keras.layers.Conv2D(256, (5, 5), strides=(1, 1), activation='relu'),
-#       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
-#       tf.keras.layers.Conv2D(384, (3, 3), strides=(1, 1), activation='relu'),
-#       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
-#       tf.keras.layers.Conv2D(512, (4, 4), strides=(1, 1), activation='relu'),
-#       tf.keras.layers.Reshape((1, 512)),
-#       tf.keras.layers.LSTM(256, activation="tanh", return_sequences=True),
-#       tf.keras.layers.Dense(self.ySize, activation='softmax')
-#     ])
-    
-#     return model
-  
-  # CNN LSTM Baseline
-#   def modelF(self):
-#     model = tf.keras.Sequential([
-#       tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), activation='relu', input_shape=(256, 256, 1)), # 254, 254, 64
-#       tf.keras.layers.BatchNormalization(axis=-1),
-#       tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),                                             # 127, 127, 64
-#       tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), activation='relu'),                            # 125, 125, 64
-#       tf.keras.layers.BatchNormalization(axis=-1),
-#       tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),                                             # 31, 31, 64
-#       tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1), activation='relu'),                           # 29, 29, 128
-#       tf.keras.layers.BatchNormalization(axis=-1),
-#       tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),                                             # 7, 7, 128
-#       tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1), activation='relu'),                           # 5, 5, 128
-#       tf.keras.layers.BatchNormalization(axis=-1),
-#       tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),                                             # 1, 1, 128
-#       tf.keras.layers.Reshape((1, 128)),
-#       tf.keras.layers.LSTM(256, activation="tanh", return_sequences=True),
-#       tf.keras.layers.Dense(self.ySize, activation='softmax')
-#     ])
-    
-#     return model
 
-  # CNN LSTM Baseline
+  ####################################################################################################################
+  ################################################## CNN LSTM Model ##################################################
+  ####################################################################################################################
+  
+#   CNN LSTM Baseline from Article
 #   def modelF(self):
 #     model = tf.keras.Sequential([
 #       tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), activation='relu', input_shape=(256, 256, 1)), # 254, 254, 64
+#       tf.keras.layers.BatchNormalization(axis=-1),
 #       tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),                                             # 127, 127, 64
 #       tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), activation='relu'),                            # 125, 125, 64
+#       tf.keras.layers.BatchNormalization(axis=-1),
 #       tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),                                             # 31, 31, 64
 #       tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1), activation='relu'),                           # 29, 29, 128
+#       tf.keras.layers.BatchNormalization(axis=-1),
 #       tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),                                             # 7, 7, 128
 #       tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1), activation='relu'),                           # 5, 5, 128
+#       tf.keras.layers.BatchNormalization(axis=-1),
 #       tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),                                             # 1, 1, 128
 #       tf.keras.layers.Reshape((1, 128)),
 #       tf.keras.layers.LSTM(256, activation="tanh", return_sequences=True),
@@ -245,7 +219,7 @@ class CNNModel:
 #     return model
 
   #   # CNN LSTM Baseline
-  def modelF(self):
+  def cnnLstmModelA(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)), # 62, 62, 120
       tf.keras.layers.BatchNormalization(axis=-1),
@@ -266,7 +240,7 @@ class CNNModel:
     return model
 
   #   # CNN LSTM Baseline
-  def modelG(self):
+  def cnnLstmModelB(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)), # 62, 62, 120
       tf.keras.layers.BatchNormalization(axis=-1),
@@ -286,7 +260,7 @@ class CNNModel:
     return model
 
   #   # CNN LSTM Baseline
-  def modelH(self):
+  def cnnLstmModelC(self):
     model = tf.keras.Sequential([
       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)), # 62, 62, 120
       tf.keras.layers.BatchNormalization(axis=-1),
@@ -308,7 +282,7 @@ class CNNModel:
     return model
 
   #  Add Time Distributed
-  def modelI(self):
+  def cnnLstmModelD(self):
     model = tf.keras.Sequential([
       TimeDistributed(tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu'), input_shape=(1, 256, 256, 1)), # 62, 62, 120
       TimeDistributed(tf.keras.layers.BatchNormalization(axis=-1)),
@@ -329,32 +303,6 @@ class CNNModel:
     
     return model
 
-#   #  Add Time Distributed
-#   def modelI(self):
-#     cnn = tf.keras.Sequential([
-#       tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=(256, 256, 1)), # 62, 62, 120
-#       tf.keras.layers.BatchNormalization(axis=-1),
-#       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),                        # 30, 30, 120
-#       tf.keras.layers.Conv2D(256, (5, 5), strides=(1, 1), activation='relu'),      # 26, 26, 256
-#       tf.keras.layers.BatchNormalization(axis=-1),
-#       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)) ,                        # 12, 12, 256
-#       tf.keras.layers.Conv2D(384, (3, 3), strides=(1, 1), activation='relu'),      # 10, 10, 384
-#       tf.keras.layers.BatchNormalization(axis=-1) ,
-#       tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),                        #  4,  4, 384
-#       # tf.keras.layers.Flatten(),                                                   #      1, 6144
-#       tf.keras.layers.Reshape((1, 6144)),                                                                  #      1, 6144
-#     ])
-      
-# #     ])
-    
-#     model = tf.keras.Sequential([
-#       TimeDistributed(cnn),
-#       tf.keras.layers.LSTM(1024, activation="tanh", return_sequences=False),       #      1, 2048
-#       tf.keras.layers.LSTM(256),                                                   #      1, 256
-#       tf.keras.layers.Dense(self.ySize, activation='softmax')                      #      1, ySize
-#     ])
-    
-#     return model
 
   def summary(self, input_shape=()):
     if (input_shape != ()):
