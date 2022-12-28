@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore')
 tz = pytz.timezone('Asia/Hong_Kong')
 
 class DataModel:
-  def __init__(self, labelsToInclude=[], mergeHappinessExcitement=False, splitDuration=8, ignoreDuration=1):
+  def __init__(self, labelsToInclude=[], mergeHappinessExcitement=False, splitDuration=8, ignoreDuration=1, transformByStft=False, hop_length=512, win_length=2048, n_mels=128):
     # Hyperparameter
     self.splitDuration = splitDuration
     self.ignoreDuration = ignoreDuration
@@ -26,6 +26,10 @@ class DataModel:
     self.test_percent = 0.2
     self.test_amount = 1500
     self.validation_percent = 0.2
+    self.transformByStft = transformByStft
+    self.hop_length = hop_length
+    self.win_length = win_length
+    self.n_mels = n_mels
 
     if (labelsToInclude == []):
       self.labels_name = ['Neutral', 'Frustration', 'Anger', 'Sadness', 'Happiness', 'Excitement', 'Surprise', 'Disgust', 'Fear']
@@ -417,7 +421,9 @@ class DataModel:
       thisLabels = self.test_labels
       thisSR = self.test_sampling_rates
     
-    # Splitting and Padding Data
+    ##################################################################
+    ################### Splitting and Padding Data ###################
+    ##################################################################
     # Split at or add padding to splitDuration (hyperparameter)
     #   if remaining duration is less than 1 sec, remove
     data = []
@@ -491,6 +497,10 @@ class DataModel:
       
     print('')
     
+    ##################################################################
+    ######################## Mel Spectrogram #########################
+    ##################################################################
+    
     if (not testing):
       print('Processing training data to Mel Spectrogram...')
     else:
@@ -501,11 +511,15 @@ class DataModel:
 
     for i, x in enumerate(thisData):
       # Extract Mel-Sectrogram
-      mel_spec = librosa.feature.melspectrogram(y=x, sr=thisSR[i])
-      mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.min)
+      if (self.transformByStft == True):
+        mel_spec = librosa.feature.melspectrogram(y=x, sr=thisSR[i], hop_length=self.hop_length, win_length=self.win_length, n_mels=self.n_mels)
+        mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.max)
+      else:
+        mel_spec = librosa.feature.melspectrogram(y=x, sr=thisSR[i])
+        mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.min)
 
-      # Resize Mel-Spectrogram
-      mel_spec = cv2.resize(mel_spec, self.dimension, interpolation=cv2.INTER_CUBIC)
+        # Force Resize Mel-Spectrogram using image
+        mel_spec = cv2.resize(mel_spec, self.dimension, interpolation=cv2.INTER_CUBIC)
       
       # Free up memory from data
       thisData[i] = None
@@ -588,40 +602,6 @@ class DataModel:
     print(f"    Training Size : {len(self.data)}")
     print(f"    Testing Size  : {len(self.test_data)}")
     print('')
-
-    # # Take training data and shuffle
-    # x_train = self.x_images[:training_size]
-    # y_train = self.labels[:training_size]
-    # sr_train = self.sampling_rates[:training_size]
-    # x_test = self.x_images[training_size:]
-    # y_test = self.labels[training_size:]
-    # sr_test = self.sampling_rates[training_size:]
-
-    # train = list(zip(x_train, y_train, sr_train))
-    # for i in range(training_size):
-    #   self.x_images[i] = None
-    
-    # np.delete(self.x_images, np.s_[:training_size], 0)
-    # np.delete(self.labels, np.s_[:training_size], 0)
-    # np.delete(self.sampling_rates, np.s_[:training_size], 0)
-    
-    # np.random.seed(0)
-    # np.random.shuffle(train)
-    
-    # x_train, y_train, sr_train = zip(*train)
-    # del train[:]
-    
-    # self.x_train = np.asarray(x_train)
-    # self.y_train = np.asarray(y_train)
-    # self.sr_train = np.asarray(sr_train)
-
-    # # Take test data
-    # self.x_test = np.asarray(x_test)
-    # self.y_test = np.asarray(y_test)
-    # self.sr_test = np.asarray(sr_test)
-
-    # print('Train Test Split Completed')
-    # print('')
 
   #############################
   ### Visualization Methods ###

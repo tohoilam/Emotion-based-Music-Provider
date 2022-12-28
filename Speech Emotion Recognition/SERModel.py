@@ -38,6 +38,8 @@ class SERModel:
       model = self.cnnLstmModelC()
     elif (modelName.upper() == "cnnLstmModelD".upper()):
       model = self.cnnLstmModelD()
+    elif (modelName.upper() == "optimal".upper()):
+      model = self.optimal()
     else:
       model = None
       raise NameError("modelName does not exist. Should be cnnModel{A-E} or cnnLstmModel{A-D}")
@@ -302,7 +304,48 @@ class SERModel:
     ])
     
     return model
+  
+  # # CNN LSTM Baseline from Article
+  # def optimal(self):
+  #   model = tf.keras.Sequential([
+  #     tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), padding="same", input_shape=(128, 251, 1)), # 254, 254, 64
+  #     tf.keras.layers.BatchNormalization(axis=-1),
+  #     tf.keras.layers.Activation('elu'),
+  #     tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),                                             # 127, 127, 64
+  #     tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), padding="same"),                            # 125, 125, 64
+  #     tf.keras.layers.BatchNormalization(axis=-1),
+  #     tf.keras.layers.Activation('elu'),
+  #     tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),                                             # 31, 31, 64
+  #     tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1), padding="same"),                           # 29, 29, 128
+  #     tf.keras.layers.BatchNormalization(axis=-1),
+  #     tf.keras.layers.Activation('elu'),
+  #     tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),                                             # 7, 7, 128
+  #     tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1), padding="same"),                           # 5, 5, 128
+  #     tf.keras.layers.BatchNormalization(axis=-1),
+  #     tf.keras.layers.Activation('elu'),
+  #     tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),                                             # 1, 1, 128
+  #     tf.keras.layers.Reshape((1, 128)),
+  #     tf.keras.layers.LSTM(256, activation="tanh", return_sequences=True),
+  #     tf.keras.layers.Dense(self.ySize, activation='softmax')
+  #   ])
+    
+  #   return model
 
+  # CNN LSTM Baseline from Article
+  def optimal(self):
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(32, (3, 3), strides=(1, 1), padding="same", activation='relu', input_shape=(128, 251, 1)),
+      tf.keras.layers.Conv2D(32, (3, 3), strides=(1, 1), padding="same", activation='relu', input_shape=(128, 251, 1)),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), padding="same", activation='relu'),
+      tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), padding="same", activation='relu'),
+      tf.keras.layers.MaxPooling2D((4, 4), strides=(4, 4)),
+      tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(256, activation='relu'),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
 
   def summary(self, input_shape=()):
     if (input_shape != ()):
