@@ -41,81 +41,15 @@ jQuery(document).ready(function () {
 						&& listObject.length > 0) {
 					// Export the WAV file
 					myRecorder.objects.recorder.exportWAV(function (blob) {
-						var url = (window.URL || window.webkitURL)
-								.createObjectURL(blob);
-						
 						var filename = new Date().toLocaleString('en-US', {
-													timeZone: 'Hongkong'
-												})
-												.replaceAll(',', '')
-												.replaceAll('/', '-')
-												.replace(':', 'h')
-												.replace(':', 'm');
-
-						// Prepare the playback
-						var audioObject = $('<audio controls></audio>')
-								.attr('src', url);
-
-						// Prepare the download link
-						var downloadObject = $('<a>&#9660;</a>')
-								.attr('href', url)
-								.attr('download', filename + '.wav');
+																	timeZone: 'Hongkong'
+																})
+																.replaceAll(',', '')
+																.replaceAll('/', '-')
+																.replace(':', 'h')
+																.replace(':', 'm');
 						
-						let classFileName = filename.replaceAll(' ', '');
-						var emotionObject = $(`<ul id="${classFileName}" class="emotion-result"></ul>`);
-					
-
-						// Wrap everything in a row
-						var holderObject = $('<div class="audio-row"></div>')
-								.append(audioObject)
-								.append(downloadObject)
-								.append(emotionObject);
-
-						// Append to the list
-						listObject.append(holderObject);
-
-						blobList.push(blob);
-						filenameList.push(filename + '.wav');
-
-						if (true) {
-							// Bug: Can't load audio data after puttint it out to 
-							try {
-								context = new AudioContext({sampleRate: 16000});
-								var audioBuffer = null;
-
-								try {
-									var request = new XMLHttpRequest();
-									request.open('GET', url, true);
-									request.responseType = 'arraybuffer';
-
-									// Decode asynchronously
-									request.onload = () => {
-										context.decodeAudioData(request.response,
-											(buffer) => {
-												audioBuffer = buffer;
-												// console.log("Duration: " + audioBuffer.duration)
-												// console.log("Length: " + audioBuffer.length)
-												// console.log("Channels: " + audioBuffer.numberOfChannels)
-												// console.log("SR: " + audioBuffer.sampleRate)
-												listAudioData.push(audioBuffer.getChannelData(0))
-												listSR.push(audioBuffer.sampleRate)
-											},
-											(err) => {
-												console.error(`Error with decoding audio data: ${err.err}`)
-											}
-										);
-									}
-									request.send();
-								}
-								catch(e) {
-									alert('Request to retrieve audio data failed')
-									console.log(e.err)
-								}
-							}
-							catch(e) {
-								alert('Web Audio API is not supported in this browser');
-							}
-							}
+						addAudioRow(filename + '.wav', blob);
 					});
 				}
 			}
@@ -124,8 +58,6 @@ jQuery(document).ready(function () {
 
 	// Prepare the recordings list
 	var listObject = $('[data-role="recordings"]');
-	listAudioData = []
-	listSR = []
 
 	// Prepare the record button
 	$('[data-role="controls"] > button').click(function () {
@@ -159,10 +91,6 @@ jQuery(document).ready(function () {
 
 			formData.append(filenameNoExtension, blob, filename);
 		}
-
-		console.log(blobList);
-		console.log(filenameList);
-		console.log(formData);
 		
 
 		$.ajax(url, {
@@ -181,7 +109,7 @@ jQuery(document).ready(function () {
 			if (response && response.data && response.data.length > 0) {
 				response.data.forEach(data => {
 					let emotion = data.emotion;
-					let name = data.name.replaceAll('.wav', '').replaceAll(' ', '');
+					let name = data.name.replaceAll('.wav', '').replaceAll(' ', '-');
 					let section = data.section;
 					let sectionClass = section.replaceAll(':', '').replaceAll(' ', '');
 					let resultObject = $(`<ul class="${sectionClass}">${sectionClass}: ${emotion}</ul>`);
@@ -251,9 +179,39 @@ jQuery(document).ready(function () {
 				
 				// let filename = file.name.substring(file.name.indexOf('.'));
 				// filename = dateName + filename;
-				blobList.push(file);
-				filenameList.push(file.name);
+				addAudioRow(file.name, file);
 			}
 		}
+	}
+
+	var addAudioRow = (filename, blob) => {
+		var url = (window.URL || window.webkitURL)
+				.createObjectURL(blob);
+
+		// Prepare the playback
+		var audioObject = $('<audio controls></audio>')
+				.attr('src', url);
+
+		// Prepare the download link
+		var downloadObject = $('<a>&#9660;</a>')
+				.attr('href', url)
+				.attr('download', filename);
+		
+		let classFileName = filename.replaceAll(' ', '-');
+		classFileName = classFileName.substring(0, classFileName.indexOf('.'));
+		var emotionObject = $(`<ul id="${classFileName}" class="emotion-result"></ul>`);
+	
+
+		// Wrap everything in a row
+		var holderObject = $('<div class="audio-row"></div>')
+				.append(audioObject)
+				.append(downloadObject)
+				.append(emotionObject);
+
+		// Append to the list
+		listObject.append(holderObject);
+
+		blobList.push(blob);
+		filenameList.push(filename);
 	}
 });
