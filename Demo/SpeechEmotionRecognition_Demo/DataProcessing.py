@@ -8,14 +8,19 @@ import cv2
 
 
 class DataProcessing:
-  def __init__(self, labelsToInclude=[], splitDuration=8, ignoreDuration=1):
+  def __init__(self, labelsToInclude=[], splitDuration=8, ignoreDuration=1, transformByStft=False, hop_length=512, win_length=2048, n_mels=128):
     # Hyperparameter
     self.splitDuration = splitDuration
     self.ignoreDuration = ignoreDuration
+    self.transformByStft = transformByStft
+    self.hop_length = hop_length
+    self.win_length = win_length
+    self.n_mels = n_mels
     self.dimension = (256, 256)
     self.x_test = []
     self.sr = []
     self.recording_names = []
+    
 
     if (labelsToInclude == []):
       self.labels_name = ['Neutral', 'Frustration', 'Anger', 'Sadness', 'Happiness', 'Excitement', 'Surprise', 'Disgust', 'Fear']
@@ -23,7 +28,9 @@ class DataProcessing:
       self.labels_name = labelsToInclude
       
   def loadAndExtractTestData(self):
-    audio_list = []
+    x_list = []
+    sr_list = []
+    recording_names = []
     
     data_path = os.path.join(os.getcwd(), 'demoData')
     
@@ -61,25 +68,30 @@ class DataProcessing:
         # Load Audio and x
         wav_path = os.path.join(dirname, filename)
         audio = AudioSegment.from_file(wav_path)
+        audio = audio.set_frame_rate(16000)
+        sr = audio.frame_rate
+        audio = effects.normalize(audio, headroom = 5.0) # TODO: Try other head room
+        x = np.array(audio.get_array_of_samples(), dtype = 'float32')
         
-        audio_list.append(audio)
-        self.recording_names.append(filename)
+        x_list.append(x)
+        sr_list.append(sr)
+        recording_names.append(filename)
     
-    self.extractTestData(audio_list)
+    self.extractTestData(x_list, sr_list, recording_names)
   
-  def extractTestData(self, audio_list):
+  def extractTestData(self, x_list, sr_list, recording_names):
     print('Loading and Extracting Data...')
     
     # Process Audio
-    for audio in audio_list:
-      sr = audio.frame_rate
-      
-      audio = effects.normalize(audio, headroom = 5.0) # TODO: Try other head room
-      processed_x = np.array(audio.get_array_of_samples(), dtype = 'float32')
-      processed_x, _ = librosa.effects.trim(processed_x, top_db = 30)
+    for i, x in enumerate(x_list):
+      sr = sr_list[i]
+      recording_name = recording_names[i]
+
+      processed_x, _ = librosa.effects.trim(x, top_db = 30)
       processed_x = nr.reduce_noise(processed_x, sr=sr)
       self.x_test.append(processed_x)
       self.sr.append(sr)
+      self.recording_names.append(recording_name)
     
     print('Data Loading and Extraction Completed!\n')
   
@@ -140,17 +152,21 @@ class DataProcessing:
               x_test.append(splitSection)
               sampling_rates.append(sr)
               recording_names.append((recording_name, f"{lowMin}:{lowSec} - {highMin}:{highSec}"))
-    
+
     # Convert to Mel-Spectrogram
     x_images = []
 
     for i, x in enumerate(x_test):
       # Extract Mel-Sectrogram
-      mel_spec = librosa.feature.melspectrogram(y=x, sr=sampling_rates[i])
-      mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.min)
+      if (self.transformByStft == True):
+        mel_spec = librosa.feature.melspectrogram(y=x, sr=sampling_rates[i], hop_length=self.hop_length, win_length=self.win_length, n_mels=self.n_mels)
+        mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.max)
+      else:
+        mel_spec = librosa.feature.melspectrogram(y=x, sr=sampling_rates[i])
+        mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.min)
 
-      # Resize Mel-Spectrogram
-      mel_spec = cv2.resize(mel_spec, self.dimension, interpolation=cv2.INTER_CUBIC)
+        # Force Resize Mel-Spectrogram using image
+        mel_spec = cv2.resize(mel_spec, self.dimension, interpolation=cv2.INTER_CUBIC)
 
       x_images.append(mel_spec)
 

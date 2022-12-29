@@ -29,12 +29,24 @@ def predict():
   data = request.get_json()
   # print(data['sampling_rates'])
   # print(data['audio_data'][0])
-  x_test = data['audio_data'][0]
-  
+  audio_data = data['audio_data']
+  sampling_rates = data['sampling_rates']
+  names = list(range(len(sampling_rates)))
+  audio_data = [ np.nan_to_num(np.array(list(x.values()), dtype = 'float32')) for x in audio_data ]
+
   # Load Data
   dataModel = DataProcessing(labelsToInclude=labelsToInclude, splitDuration=splitDuration, ignoreDuration=ignoreDuration)
-  dataModel.loadAndExtractTestData()
+  dataModel.extractTestData(x_list=audio_data, sr_list=sampling_rates, recording_names=names)
   dataModel.processData()
+  
+  y_pred = np.argmax(model.predict(dataModel.x_test), axis=1)
+
+  print('Prediction Result:')
+  for i, pred in enumerate(y_pred):
+    predicted_label = labelsToInclude[pred]
+    recording_name = dataModel.recording_names[i]
+  
+    print(f"{recording_name[0]:25} {recording_name[1]} ---> {predicted_label}")
   
   
   return render_template('index.html', prediction_text='successful')

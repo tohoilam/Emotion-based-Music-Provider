@@ -1,4 +1,5 @@
 const sampleRate = 16000;
+fileTemp = null;
 
 jQuery(document).ready(function () {
 	var $ = jQuery;
@@ -59,10 +60,14 @@ jQuery(document).ready(function () {
 						// Append to the list
 						listObject.append(holderObject);
 
+						fileTemp = new File([blob], new Date().toUTCString(), {
+							type: "audio/wav",
+						  });
+
 						if (true) {
 							// Bug: Can't load audio data after puttint it out to 
 							try {
-								context = new AudioContext();
+								context = new AudioContext({sampleRate: 16000});
 								var audioBuffer = null;
 
 								try {
@@ -79,10 +84,8 @@ jQuery(document).ready(function () {
 												// console.log("Length: " + audioBuffer.length)
 												// console.log("Channels: " + audioBuffer.numberOfChannels)
 												// console.log("SR: " + audioBuffer.sampleRate)
-
 												listAudioData.push(audioBuffer.getChannelData(0))
 												listSR.push(audioBuffer.sampleRate)
-												
 											},
 											(err) => {
 												console.error(`Error with decoding audio data: ${err.err}`)
@@ -139,7 +142,7 @@ jQuery(document).ready(function () {
 		const data = {audio_data: listAudioData, sampling_rates: listSR}
 		const dataJson = JSON.stringify(data)
 		$.ajax(url, { type: 'POST',
-			dataType: 'json',
+			dataType: 'html',
 			headers: {
 				'Content-Type': 'application/json'
 			},
@@ -171,3 +174,5 @@ jQuery(document).ready(function () {
 		// }
 	})
 });
+
+// Blog to File instead???
