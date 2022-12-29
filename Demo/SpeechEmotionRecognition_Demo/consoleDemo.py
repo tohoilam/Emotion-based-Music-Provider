@@ -5,7 +5,7 @@ from DataProcessing import DataProcessing
 
 
 modelName = "12-24 22h45m59s (Experiment 13) CNN Model B (200 Epochs) (IEMOCAP EmoDB) (Data Aug 3A) (5 Emotions with Merge and Split 4 Ignore 2) (00001 lr 0001 decay)"
-# modelName = "12-24 21h00m19s (Experiment 12) CNN Model B (200 Epochs) (IEMOCAP EmoDB) (Data Aug 2A) (5 Emotions with Merge and Split 4 Ignore 2) (00001 lr 0001 decay)"
+modelName = "12-24 21h00m19s (Experiment 12) CNN Model B (200 Epochs) (IEMOCAP EmoDB) (Data Aug 2A) (5 Emotions with Merge and Split 4 Ignore 2) (00001 lr 0001 decay)"
 # modelName = "12-28 00h57m25s Optimal TrainedModel"
 labelsToInclude = ['Anger', 'Frustration', 'Happiness', 'Neutral', 'Sadness']
 splitDuration = 4

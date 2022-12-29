@@ -1,5 +1,6 @@
 const sampleRate = 16000;
 fileTemp = null;
+blobTemp = null;
 
 jQuery(document).ready(function () {
 	var $ = jQuery;
@@ -63,6 +64,7 @@ jQuery(document).ready(function () {
 						fileTemp = new File([blob], new Date().toUTCString(), {
 							type: "audio/wav",
 						  });
+						blobTemp = blob;
 
 						if (true) {
 							// Bug: Can't load audio data after puttint it out to 
@@ -132,22 +134,34 @@ jQuery(document).ready(function () {
 		}
 	});
 
+	// // Console Log Audio Data List
+	// $('[data-role="predict_emotion_button"]').click(() => {
+	// 	var formData = new FormData();
+	// 	formData.append('file', blobTemp, 'file.wav');
+
+	// 	fetch('http://127.0.0.1:5000/predict', {
+    //       method: 'POST',
+    //       body: formData
+
+    //   }).then(response => console.log('successful'));
+	// })
+
 
 	// Console Log Audio Data List
 	$('[data-role="predict_emotion_button"]').click(() => {
-		var url = "http://127.0.0.1:5000/predict"
+		var url = "http://127.0.0.1:5000/predict";
+
 		
-		console.log(listAudioData)
-		console.log(listSR)
-		const data = {audio_data: listAudioData, sampling_rates: listSR}
-		const dataJson = JSON.stringify(data)
-		$.ajax(url, { type: 'POST',
-			dataType: 'html',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			data: dataJson,
-			contentType: 'application/json'
+		var formData = new FormData();
+		formData.append('audioData', blobTemp, 'audioData.wav');
+
+		$.ajax(url, {
+			type: 'POST',
+			// dataType: 'html',
+			data: formData,
+			cache: false,
+        	contentType: false,
+        	processData: false,
 		})
 		.done(() => {
 			console.log('Successful');
@@ -155,24 +169,31 @@ jQuery(document).ready(function () {
 		.fail(() => {
 			console.log('Failed');
 		});
-		// try {
-		// 	var request = new XMLHttpRequest();
-		// 	request.open('POST', url, true);
-		// 	request.responseType = 'text';
-		// 	request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-
-
-		// 	// Decode asynchronously
-		// 	request.onload = () => {
-		// 		console.log('Successful')
-		// 	}
-		// 	request.send(dataJson);
-		// }
-		// catch(e) {
-		// 	alert('Request to retrieve audio data failed')
-		// 	console.log(e.err)
-		// }
 	})
+
+	// // Console Log Audio Data List
+	// $('[data-role="predict_emotion_button"]').click(() => {
+	// 	var url = "http://127.0.0.1:5000/predict"
+		
+	// 	console.log(listAudioData)
+	// 	console.log(listSR)
+	// 	const data = {audio_data: listAudioData, sampling_rates: listSR}
+	// 	const dataJson = JSON.stringify(data)
+	// 	$.ajax(url, { type: 'POST',
+	// 		dataType: 'html',
+	// 		headers: {
+	// 			'Content-Type': 'application/json'
+	// 		},
+	// 		data: dataJson,
+	// 		contentType: 'application/json'
+	// 	})
+	// 	.done(() => {
+	// 		console.log('Successful');
+	// 	})
+	// 	.fail(() => {
+	// 		console.log('Failed');
+	// 	});
+	// })
 });
 
 // Blog to File instead???
