@@ -27,12 +27,12 @@ class DataProcessing:
     else:
       self.labels_name = labelsToInclude
       
-  def loadAndExtractTestData(self):
+  def loadAndExtractTestData(self, path):
     x_list = []
     sr_list = []
     recording_names = []
     
-    data_path = os.path.join(os.getcwd(), 'demoData')
+    data_path = os.path.join(os.getcwd(), path)
     
     # Convert audio file to wav format
     for dirname, _, filenames in os.walk(data_path):
@@ -68,7 +68,8 @@ class DataProcessing:
         # Load Audio and x
         wav_path = os.path.join(dirname, filename)
         audio = AudioSegment.from_file(wav_path)
-        audio = audio.set_frame_rate(16000)
+        if (audio.frame_rate != 16000):
+          audio = audio.set_frame_rate(16000)
         sr = audio.frame_rate
         audio = effects.normalize(audio, headroom = 5.0) # TODO: Try other head room
         x = np.array(audio.get_array_of_samples(), dtype = 'float32')
@@ -126,17 +127,16 @@ class DataProcessing:
         sampling_rates.append(sr)
         recording_names.append((recording_name, f"00:00 - {highMin}:{highSec}"))
       elif (duration > self.splitDuration):
-
-        for j in range(0, len(processed_x), size):
+        count = 0
+        for j in range(0, len(processed_x), size):          
           splitSection = processed_x[j:j+size]
           
-          low = j * self.splitDuration
+          low = count * self.splitDuration
           high = low + self.splitDuration
           lowMin = str(low // 60).rjust(2, '0')
           lowSec = str(low % 60).rjust(2, '0')
           highMin = str(high // 60).rjust(2, '0')
           highSec = str(high % 60).rjust(2, '0')
-          
 
           # Check if it is longer than ignoreDuration
           if (len(splitSection) > self.ignoreDuration * sr):
@@ -152,6 +152,7 @@ class DataProcessing:
               x_test.append(splitSection)
               sampling_rates.append(sr)
               recording_names.append((recording_name, f"{lowMin}:{lowSec} - {highMin}:{highSec}"))
+          count += 1
 
     # Convert to Mel-Spectrogram
     x_images = []

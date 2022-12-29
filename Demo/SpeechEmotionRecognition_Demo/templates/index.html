@@ -12,13 +12,6 @@
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
-  <form action="{{ url_for('predict')}}" method="post">
-    <input type="text" name="testing1" placeholder="testing1">
-    <input type="text" name="testing2" placeholder="testing2">
-
-    <button type="submit">Predict</button>
-  </form>
-  <h4>{{ prediction_text }}</h4>
   <div class="holder">
     <div data-role="controls">
       <button data-recording="">Record</button>

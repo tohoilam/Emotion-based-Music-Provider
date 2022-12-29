@@ -1,6 +1,6 @@
 const sampleRate = 16000;
-fileTemp = null;
-blobTemp = null;
+blobList = [];
+filenameList = [];
 
 jQuery(document).ready(function () {
 	var $ = jQuery;
@@ -43,6 +43,14 @@ jQuery(document).ready(function () {
 					myRecorder.objects.recorder.exportWAV(function (blob) {
 						var url = (window.URL || window.webkitURL)
 								.createObjectURL(blob);
+						
+						var filename = new Date().toLocaleString('en-US', {
+													timeZone: 'Hongkong'
+												})
+												.replaceAll(',', '')
+												.replaceAll('/', '-')
+												.replace(':', 'h')
+												.replace(':', 'm');
 
 						// Prepare the playback
 						var audioObject = $('<audio controls></audio>')
@@ -51,20 +59,26 @@ jQuery(document).ready(function () {
 						// Prepare the download link
 						var downloadObject = $('<a>&#9660;</a>')
 								.attr('href', url)
-								.attr('download', new Date().toUTCString() + '.wav');
+								.attr('download', filename + '.wav');
+						
+						let classFileName = filename.replaceAll(' ', '');
+						var emotionObject = $(`<ul id="${classFileName}" class="emotion-result"></ul>`);
+					
 
 						// Wrap everything in a row
 						var holderObject = $('<div class="row"></div>')
 								.append(audioObject)
-								.append(downloadObject);
+								.append(downloadObject)
+								.append(emotionObject);
 
 						// Append to the list
 						listObject.append(holderObject);
 
-						fileTemp = new File([blob], new Date().toUTCString(), {
-							type: "audio/wav",
-						  });
-						blobTemp = blob;
+						// fileTemp = new File([blob], filename, {
+						// 	type: "audio/wav",
+						// });
+						blobList.push(blob);
+						filenameList.push(filename)
 
 						if (true) {
 							// Bug: Can't load audio data after puttint it out to 
@@ -134,18 +148,6 @@ jQuery(document).ready(function () {
 		}
 	});
 
-	// // Console Log Audio Data List
-	// $('[data-role="predict_emotion_button"]').click(() => {
-	// 	var formData = new FormData();
-	// 	formData.append('file', blobTemp, 'file.wav');
-
-	// 	fetch('http://127.0.0.1:5000/predict', {
-    //       method: 'POST',
-    //       body: formData
-
-    //   }).then(response => console.log('successful'));
-	// })
-
 
 	// Console Log Audio Data List
 	$('[data-role="predict_emotion_button"]').click(() => {
@@ -153,47 +155,42 @@ jQuery(document).ready(function () {
 
 		
 		var formData = new FormData();
-		formData.append('audioData', blobTemp, 'audioData.wav');
+		for (let i = 0; i < blobList.length; i++) {
+			const blob = blobList[i];
+			const filename = filenameList[i];
+
+			formData.append(filename, blob, filename + '.wav');
+		}
+		
 
 		$.ajax(url, {
 			type: 'POST',
-			// dataType: 'html',
+			dataType: 'json',
 			data: formData,
 			cache: false,
         	contentType: false,
         	processData: false,
 		})
-		.done(() => {
-			console.log('Successful');
+		.done((response) => {
+			console.log(response);
+			// Clear Previous Result
+			$('ul.emotion-result').empty();
+
+			// Show Predicted Result
+			if (response && response.data && response.data.length > 0) {
+				response.data.forEach(data => {
+					let emotion = data.emotion;
+					let name = data.name.replaceAll('.wav', '').replaceAll(' ', '');
+					let section = data.section;
+					let sectionClass = section.replaceAll(':', '').replaceAll(' ', '');
+					let resultObject = $(`<ul class="${sectionClass}">${sectionClass}: ${emotion}</ul>`);
+					$(`ul#${name}`).append(resultObject);
+
+				});
+			}
 		})
 		.fail(() => {
 			console.log('Failed');
 		});
 	})
-
-	// // Console Log Audio Data List
-	// $('[data-role="predict_emotion_button"]').click(() => {
-	// 	var url = "http://127.0.0.1:5000/predict"
-		
-	// 	console.log(listAudioData)
-	// 	console.log(listSR)
-	// 	const data = {audio_data: listAudioData, sampling_rates: listSR}
-	// 	const dataJson = JSON.stringify(data)
-	// 	$.ajax(url, { type: 'POST',
-	// 		dataType: 'html',
-	// 		headers: {
-	// 			'Content-Type': 'application/json'
-	// 		},
-	// 		data: dataJson,
-	// 		contentType: 'application/json'
-	// 	})
-	// 	.done(() => {
-	// 		console.log('Successful');
-	// 	})
-	// 	.fail(() => {
-	// 		console.log('Failed');
-	// 	});
-	// })
 });
-
-// Blog to File instead???
