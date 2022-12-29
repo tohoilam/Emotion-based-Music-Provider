@@ -66,7 +66,7 @@ jQuery(document).ready(function () {
 					
 
 						// Wrap everything in a row
-						var holderObject = $('<div class="row"></div>')
+						var holderObject = $('<div class="audio-row"></div>')
 								.append(audioObject)
 								.append(downloadObject)
 								.append(emotionObject);
@@ -74,11 +74,8 @@ jQuery(document).ready(function () {
 						// Append to the list
 						listObject.append(holderObject);
 
-						// fileTemp = new File([blob], filename, {
-						// 	type: "audio/wav",
-						// });
 						blobList.push(blob);
-						filenameList.push(filename)
+						filenameList.push(filename + '.wav');
 
 						if (true) {
 							// Bug: Can't load audio data after puttint it out to 
@@ -158,9 +155,14 @@ jQuery(document).ready(function () {
 		for (let i = 0; i < blobList.length; i++) {
 			const blob = blobList[i];
 			const filename = filenameList[i];
+			const filenameNoExtension = filename.substring(0, filename.indexOf('.'));
 
-			formData.append(filename, blob, filename + '.wav');
+			formData.append(filenameNoExtension, blob, filename);
 		}
+
+		console.log(blobList);
+		console.log(filenameList);
+		console.log(formData);
 		
 
 		$.ajax(url, {
@@ -172,7 +174,6 @@ jQuery(document).ready(function () {
         	processData: false,
 		})
 		.done((response) => {
-			console.log(response);
 			// Clear Previous Result
 			$('ul.emotion-result').empty();
 
@@ -193,4 +194,66 @@ jQuery(document).ready(function () {
 			console.log('Failed');
 		});
 	})
+
+	// File Upload Section
+	$('#upload-form').click((e) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		$('#file-input').trigger('click');
+	})
+
+	$('#file-input').change((e) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		console.log('hi');
+		console.log(e.target.files);
+		if (e.target.files && e.target.files.length > 0) {
+			const files = e.target.files;
+			storeFiles(files);
+		}
+	})
+
+	 // preventing page from redirecting
+	 $("#upload-form").on("dragover", e => {
+		e.preventDefault();
+		e.stopPropagation();
+		
+	 });
+	
+	 $("#upload-form").on("drop", e => {
+		e.preventDefault();
+		e.stopPropagation();
+		console.log('drop');
+
+		const files = e.originalEvent.dataTransfer.files;
+		storeFiles(files);
+	});
+
+	var storeFiles = (files) => {
+		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
+			// if (file.type != 'audio/wav' || file.type != 'audio/x-m4a' || file.type != 'audio/mpeg'  || file.type != 'audio/ogg')
+			if (file.type !== 'audio/wav' && file.type !== 'audio/x-m4a'
+				&& file.type !== 'audio/mpeg' && file.type !== 'audio/ogg'
+				&& file.type !== 'audio/basic') {
+				console.log("Please only upload .wav, .m4a, .mp3, .ogg, .opus, or .au file type!");
+			}
+			else {
+				// let dateName = new Date().toLocaleString('en-US', {
+				// 												timeZone: 'Hongkong'
+				// 											})
+				// 											.replaceAll(',', '')
+				// 											.replaceAll('/', '-')
+				// 											.replace(':', 'h')
+				// 											.replace(':', 'm');
+				
+				// let filename = file.name.substring(file.name.indexOf('.'));
+				// filename = dateName + filename;
+				blobList.push(file);
+				filenameList.push(file.name);
+			}
+		}
+	}
 });

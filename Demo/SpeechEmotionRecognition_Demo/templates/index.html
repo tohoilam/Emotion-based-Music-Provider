@@ -7,17 +7,54 @@
   <title>Speech Emotion Recognition Demo</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="../static/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <script type="text/javascript" src="https://code.jquery.com/jquery.min.js"></script>
   <script src="https://markjivko.com/dist/recorder.js"></script>
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
-  <div class="holder">
+  <header>Speech Emotion Recognition</header>
+  <section id="file-upload">
+    <h1 class="file-upload-header">File Upload</h1>
+    <form id="upload-form" action="#">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <p>Browse File to Upload</p>
+    </form>
+    <input type="file" id="file-input" multiple>
+    <div id="upload-progress-area">
+      <li class="upload-row">
+        <i class="fas fa-file-alt"></i>
+        <div class="upload-content">
+          <div class="upload-details">
+            <span class="upload-name">audio.wav - Uploading</span>
+            <span class="upload-percent">50%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress"></div>
+          </div>
+        </div>
+      </li>
+    </div>
+    <div id="uploaded-area">
+      <li class="upload-row">
+        <div class="upload-content">
+          <i class="fas fa-file-alt"></i>
+          <div class="upload-details">
+            <span class="name">audio.wav - Uploaded</span>
+            <span class="size">70 KB</span>
+          </div>
+        </div>
+        <i class="fas fa-check"></i>
+      </li>
+    </div> 
+  </section>
+  <section class="holder">
     <div data-role="controls">
       <button data-recording="">Record</button>
     </div>
     <div data-role="recordings"></div>
-  </div>
+  </section>
   <button data-role="predict_emotion_button">Predict Emotion Button</button>
+  
 </body>
 </html>

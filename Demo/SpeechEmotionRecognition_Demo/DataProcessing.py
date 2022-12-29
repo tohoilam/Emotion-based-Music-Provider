@@ -41,10 +41,21 @@ class DataProcessing:
         if (filename == 'desktop.ini' or filename == 'desktop.in.txt' or filename == '.DS_Store' or filename == '.DS'):
           continue
         
-        m4a_file = os.path.join(dirname, filename)
-        wav_filename = os.path.join(dirname, filename[:-4] + ".wav")
-        track = AudioSegment.from_file(m4a_file,  format= 'm4a')
-        file_handle = track.export(wav_filename, format='wav')
+        if (filename[-4:] != '.wav'):
+          original_file = os.path.join(dirname, filename)
+          wav_filename = os.path.join(dirname, filename[:-4] + ".wav")
+          if (filename[-4:] == '.m4a'):
+            track = AudioSegment.from_file(original_file,  format='m4a')
+            file_handle = track.export(wav_filename, format='wav')
+          elif (filename[-4:] == '.mp3'):
+            track = AudioSegment.from_mp3(original_file)
+            file_handle = track.export(wav_filename, format='wav')
+          elif (filename[-4:] == '.ogg' or filename[-5:] == '.opus'):
+            track = AudioSegment.from_ogg(original_file)
+            file_handle = track.export(wav_filename, format='wav')
+          elif (filename[-3:] == '.au'):
+            track = AudioSegment.from_file(original_file,  format='au')
+            file_handle = track.export(wav_filename, format='wav')
     
     # Delete non wav file
     # Convert audio file to wav format
@@ -54,7 +65,7 @@ class DataProcessing:
         if (filename == 'desktop.ini' or filename == 'desktop.in.txt' or filename == '.DS_Store' or filename == '.DS'):
           continue
         
-        if (filename[-4:] == '.m4a'):
+        if (filename[-4:] != '.wav'):
           file_path = os.path.join(dirname, filename)
           os.remove(file_path)
     

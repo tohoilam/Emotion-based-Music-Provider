@@ -48,6 +48,7 @@ def predict():
   
   # 2). Get audio files and save in backend
   if (len(request.files) != 0):
+    print(request.files)
     for filename in request.files:
       try:
         file = request.files[filename]
