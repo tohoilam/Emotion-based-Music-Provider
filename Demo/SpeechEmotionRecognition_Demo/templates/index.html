@@ -14,6 +14,9 @@
 </head>
 <body>
   <header>Speech Emotion Recognition</header>
+  <section id="model-section">
+    model
+  </section>
   <section id="file-upload">
     <h1 class="file-upload-header">File Upload</h1>
     <form id="upload-form" action="#">
@@ -21,7 +24,20 @@
       <p>Browse File to Upload</p>
     </form>
     <input type="file" id="file-input" multiple>
-    <div id="upload-progress-area">
+  </section>
+  <section id="recording-section">
+    <div data-role="controls">
+      <button data-recording="">Record</button>
+    </div>
+  </section>
+  <section id="predict-button-section">
+    <button data-role="predict-emotion-button">Predict Emotion Button</button>
+  </section>
+  <section id="audio-section">
+    <div data-role="recordings"></div>
+  </section>
+
+  <!-- <div id="upload-progress-area">
       <li class="upload-row">
         <i class="fas fa-file-alt"></i>
         <div class="upload-content">
@@ -46,15 +62,6 @@
         </div>
         <i class="fas fa-check"></i>
       </li>
-    </div> 
-  </section>
-  <section class="holder">
-    <div data-role="controls">
-      <button data-recording="">Record</button>
-    </div>
-    <div data-role="recordings"></div>
-  </section>
-  <button data-role="predict_emotion_button">Predict Emotion Button</button>
-  
+    </div>  -->
 </body>
 </html>

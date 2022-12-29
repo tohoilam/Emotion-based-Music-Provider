@@ -79,7 +79,7 @@ jQuery(document).ready(function () {
 
 
 	// Console Log Audio Data List
-	$('[data-role="predict_emotion_button"]').click(() => {
+	$('[data-role="predict-emotion-button"]').click(() => {
 		var url = "http://127.0.0.1:5000/predict";
 
 		

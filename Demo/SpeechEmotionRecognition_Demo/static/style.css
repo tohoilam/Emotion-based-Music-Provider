@@ -8,19 +8,66 @@
 
 body {
   position: absolute;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 20% 20% 60%;
+  grid-template-rows: 15% 20% 45% 20%;
+  /* display: flex; */
+  /* justify-content: center; */
+  /* align-items: center; */
   height: 100vh;
   width: 100%;
   margin: 0;
 }
 
+header {
+  text-align: center;
+  padding-top: 15px;
+  grid-column: 1 / span 3;
+  grid-row: 1 / span 1;
+  font-size: 1.8rem;
+}
+
+#model-section {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 10px;
+  grid-column: 1 / span 2;
+  grid-row: 2 / span 1;
+}
+
+#file-upload {
+  grid-column: 1 / span 1;
+  grid-row: 3 / span 1;
+}
+
+#recording-section {
+  grid-column: 2 / span 1;
+  grid-row: 3 / span 1;
+}
+
+#predict-button-section {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 10px;
+  grid-column: 1 / span 2;
+  grid-row: 4 / span 1;
+}
+
 /* Audio Recording Section */
-.holder {
+#audio-section {
   background-color: #4c474c;
   background-image: linear-gradient(0deg, #4c474c 0%, #141414 100%);
   border-radius: 50px;
+  grid-column: 3 / span 1;
+  grid-row: 2 / span 3;
+  margin: 15px;
+  overflow-y: auto;
 }
 
 [data-role="controls"] > button {
@@ -87,9 +134,9 @@ body {
 
 /* File Upload Section */
 #file-upload {
-  width: 430px;
+  width: 100%;
   padding: 30px;
-  background: #6fe1f5;
+  /* background: #6fe1f5; */
   border-radius: 5px;
 }
 
@@ -203,3 +250,8 @@ body {
   color: #6990f2;
   font-size: 16px;
 }
+
+[data-role="predict-emotion-button"] {
+
+}
+
