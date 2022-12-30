@@ -8,20 +8,15 @@ from flask import Flask, request, render_template
 from DataProcessing import DataProcessing
 
 UPLOAD_DIR = os.path.join('static', 'data')
+MODEL_PATH = 'models'
+MODEL_CONFIG_PATH = os.path.join('static', 'models.json')
 
 app = Flask(__name__)
 app.config['UPLOAD_DIR'] = UPLOAD_DIR
+app.config['MODEL_PATH'] = MODEL_PATH
+app.config['MODEL_CONFIG_PATH'] = MODEL_CONFIG_PATH
 
-modelName = "12-24 22h45m59s (Experiment 13) CNN Model B (200 Epochs) (IEMOCAP EmoDB) (Data Aug 3A) (5 Emotions with Merge and Split 4 Ignore 2) (00001 lr 0001 decay)"
-labelsToInclude = ['Anger', 'Frustration', 'Happiness', 'Neutral', 'Sadness']
-splitDuration = 4
-ignoreDuration = 2
-
-# Load Model
-print('Loading Model...')
-modelDir = os.path.join(os.getcwd(), "models", modelName)
-model = tf.keras.models.load_model(modelDir)
-print('Model Loading Completed!\n')
+modelListConfig = None
 
 @app.errorhandler(413)
 def too_large(e):
@@ -30,6 +25,22 @@ def too_large(e):
 @app.route('/')
 def home():
   return render_template('index.html')
+
+@app.route('/models')
+def models():
+  with open(app.config['MODEL_CONFIG_PATH'], 'r') as f:
+    global modelListConfig
+    modelListConfig = json.load(f)
+    modelOptions = []
+    count = 0
+    for modelConfig in modelListConfig:
+      modelOptions.append({
+        'id': count,
+        'name': modelConfig['name']
+      })
+      count += 1
+  
+  return {'data': modelOptions, 'status': 'ok', 'errMsg': ''}
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -45,10 +56,44 @@ def predict():
       errMsg = 'Delete previous audio data in backend failed! ' + e
       print('Failed: ' + errMsg)
       return {'data': [], 'status': 'failed', 'errMsg': errMsg}
+    
+  # 2). Get Model Choice and Configure Model
+  if ('modelChoice' in request.form):
+    modelChoice = int(request.form['modelChoice'])
+    global modelListConfig
+    if (modelListConfig != None):
+      if (modelChoice < len(modelListConfig)):
+        modelConfig = modelListConfig[modelChoice]
+        modelName = modelConfig['name']
+        folderName = modelConfig['folderName']
+        labelsToInclude = modelConfig['labelsToInclude']
+        splitDuration = modelConfig['splitDuration']
+        ignoreDuration = modelConfig['ignoreDuration']
+        transformByStft = modelConfig['transformByStft']
+        hop_length = modelConfig['hop_length']
+        win_length = modelConfig['win_length']
+        n_mels = modelConfig['n_mels']
+
+        # Load Model
+        print(f"Loading Model {modelName} from {app.config['MODEL_PATH']}/{folderName}...")
+        modelDir = os.path.join(os.getcwd(), app.config['MODEL_PATH'], folderName)
+        model = tf.keras.models.load_model(modelDir)
+        print('Model Loading Completed!\n')
+      else:
+        errMsg = 'Selected model not available in backed!'
+        print('Failed: ' + errMsg)
+        return {'data': [], 'status': 'failed', 'errMsg': errMsg}
+    else:
+      errMsg = 'modelListConfig variables not initialize in backend'
+      print('Failed: ' + errMsg)
+      return {'data': [], 'status': 'failed', 'errMsg': errMsg}
+  else:
+    errMsg = 'Model is not selected!'
+    print('Failed: ' + errMsg)
+    return {'data': [], 'status': 'failed', 'errMsg': errMsg}
   
   # 2). Get audio files and save in backend
   if (len(request.files) != 0):
-    print(request.files)
     for filename in request.files:
       try:
         file = request.files[filename]
@@ -64,7 +109,13 @@ def predict():
 
   # 3). Load and Process data
   try:
-    dataModel = DataProcessing(labelsToInclude=labelsToInclude, splitDuration=splitDuration, ignoreDuration=ignoreDuration)
+    dataModel = DataProcessing(labelsToInclude=labelsToInclude,
+                               splitDuration=splitDuration,
+                               ignoreDuration=ignoreDuration,
+                               transformByStft=transformByStft,
+                               hop_length=hop_length,
+                               win_length=win_length,
+                               n_mels=n_mels)
     dataModel.loadAndExtractTestData(app.config['UPLOAD_DIR'])
     dataModel.processData()
   except Exception as e:
@@ -96,7 +147,6 @@ def predict():
   
   return {'data': predicted_data_list, 'status': 'ok', 'errMsg': ''}
 
-  
 
 if __name__ == "__main__":
   app.run()

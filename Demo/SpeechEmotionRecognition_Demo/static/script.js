@@ -1,9 +1,27 @@
 const sampleRate = 16000;
+const domain = 'http://127.0.0.1:5000'
 blobList = [];
 filenameList = [];
 
 jQuery(document).ready(function () {
 	var $ = jQuery;
+
+	$.ajax(domain + '/models', {
+		type: 'GET',
+		dataType: 'json',
+	})
+	.done((response) => {
+		if (response && response.data && response.data.length > 0) {
+			response.data.forEach(data => {
+				let optionObject = $(`<option value=${data.id}>${data.name}</option>`);
+				$('#model-selection').append(optionObject);
+			})
+		}
+	})
+	.fail(() => {
+		console.log('Failed');
+	});
+
 	var myRecorder = {
 		objects: {
 			context: null,
@@ -60,7 +78,10 @@ jQuery(document).ready(function () {
 	var listObject = $('[data-role="recordings"]');
 
 	// Prepare the record button
-	$('[data-role="controls"] > button').click(function () {
+	$('[data-role="controls"] > button').click(function (e) {
+		e.preventDefault();
+		e.stopPropagation();
+
 		// Initialize the recorder
 		myRecorder.init();
 
@@ -79,11 +100,16 @@ jQuery(document).ready(function () {
 
 
 	// Console Log Audio Data List
-	$('[data-role="predict-emotion-button"]').click(() => {
-		var url = "http://127.0.0.1:5000/predict";
+	$('[data-role="predict-emotion-button"]').click((e) => {
+		e.preventDefault();
+		e.stopPropagation();
 
+		const url = domain + "/predict";
+
+		const modelChoice = $('#model-selection').val();
 		
 		var formData = new FormData();
+		formData.append('modelChoice', modelChoice);
 		for (let i = 0; i < blobList.length; i++) {
 			const blob = blobList[i];
 			const filename = filenameList[i];
