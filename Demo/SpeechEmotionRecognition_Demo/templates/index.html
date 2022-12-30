@@ -16,28 +16,54 @@
   <header>Speech Emotion Recognition</header>
   <section id="model-section">
     <select name="model-selection" id="model-selection">
-      <option value="3">Experiment</option>
-      <option value="4">Experiment</option>
+      <option disabled selected value> -- select a model -- </option>
     </select>
   </section>
   <section id="file-upload">
     <h1 class="file-upload-header">File Upload</h1>
-    <form id="upload-form" action="#">
+    <form id="upload-form" action="#" drop-active="False" >
       <i class="fas fa-cloud-upload-alt"></i>
       <p>Browse File to Upload</p>
     </form>
     <input type="file" id="file-input" multiple>
   </section>
   <section id="recording-section">
-    <div data-role="controls">
-      <button data-recording="">Record</button>
+    <h1 class="recording-header">Record</h1>
+    <div id="recording-control">
+      <div data-role="controls">
+        <button data-recording="">Record</button>
+      </div>
     </div>
+    
   </section>
   <section id="predict-button-section">
-    <button data-role="predict-emotion-button">Predict Emotion Button</button>
+    <button data-role="predict-emotion-button">Predict Emotion</button>
   </section>
   <section id="audio-section">
-    <div data-role="recordings"></div>
+    <div data-role="recordings">
+      <!-- <div class="audio-row">
+        <audio controls></audio>
+        <a>&#9660;</a>
+        <ul id="testing1" class="emotion-result">
+          <li class="emotion-section-result"><span class="time">00:00 - 00:04</span><span class="emotion">Frustration</span></li>
+        </ul>
+      </div>
+      <div class="audio-row">
+        <audio controls></audio>
+        <a>&#9660;</a>
+        <ul id="testing2" class="emotion-result">
+          <li class="emotion-section-result"><span class="time">00:00 - 00:04</span><span class="emotion">Happiness</span></li>
+          <li class="emotion-section-result"><span class="time">00:04 - 00:08</span><span class="emotion">Anger</span></li>
+          <li class="emotion-section-result"><span class="time">00:08 - 00:12</span><span class="emotion">Neutral</span></li>
+          <li class="emotion-section-result"><span class="time">00:12 - 00:16</span><span class="emotion">Sadness</span></li>
+        </ul>
+      </div>
+      <div class="audio-row">
+        <audio controls></audio>
+        <a>&#9660;</a>
+        <ul id="testing3" class="emotion-result"></ul>
+      </div> -->
+    </div>
   </section>
 
   <!-- <div id="upload-progress-area">

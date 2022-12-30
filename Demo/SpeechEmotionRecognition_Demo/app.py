@@ -58,7 +58,7 @@ def predict():
       return {'data': [], 'status': 'failed', 'errMsg': errMsg}
     
   # 2). Get Model Choice and Configure Model
-  if ('modelChoice' in request.form):
+  if ('modelChoice' in request.form and request.form['modelChoice'] != 'null'):
     modelChoice = int(request.form['modelChoice'])
     global modelListConfig
     if (modelListConfig != None):
@@ -88,7 +88,7 @@ def predict():
       print('Failed: ' + errMsg)
       return {'data': [], 'status': 'failed', 'errMsg': errMsg}
   else:
-    errMsg = 'Model is not selected!'
+    errMsg = 'Model is not selected! Please select a model from dropdown!'
     print('Failed: ' + errMsg)
     return {'data': [], 'status': 'failed', 'errMsg': errMsg}
   
@@ -103,7 +103,7 @@ def predict():
         print('Failed: ' + errMsg)
         return {'data': [], 'status': 'failed', 'errMsg': errMsg}
   else:
-    warnMsg = 'No audio data to predict!'
+    warnMsg = 'No audio data to predict.'
     print('Warning: ' + warnMsg)
     return {'data': [], 'status': 'warning', 'errMsg': warnMsg}
 

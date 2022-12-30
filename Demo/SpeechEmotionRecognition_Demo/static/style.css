@@ -9,11 +9,13 @@
 body {
   position: absolute;
   display: grid;
-  grid-template-columns: 20% 20% 60%;
-  grid-template-rows: 15% 20% 45% 20%;
+  grid-template-columns: 18% 18% 64%;
+  grid-template-rows: 13% 15% 40% 32%;
   height: 100vh;
   width: 100%;
   margin: 0;
+  padding: 10px 40px;
+  background-color: #101010;
 }
 
 #model-section {
@@ -46,9 +48,17 @@ header {
   padding-top: 15px;
   grid-column: 1 / span 3;
   grid-row: 1 / span 1;
-  font-size: 1.8rem;
+  font-size: 2.5rem;
+  color: #3c85b6;
+  font-weight: 600;
 }
 
+h1 {
+  color: #3c85b6;
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-align: center;
+}
 
 
 
@@ -63,8 +73,18 @@ header {
   height: 100%;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   padding-top: 10px;
+}
+
+#model-selection {
+  width: 100%;
+  margin: 30px 10px 20px 10px;
+  text-overflow: ellipsis;
+  background-color: rgb(193, 193, 193);
+  border-radius: 20px;
+  padding: 2px 8px;
+  cursor: pointer;
 }
 
 
@@ -79,39 +99,44 @@ header {
 /* ***************************************************************************** */
 #file-upload {
   width: 100%;
-  padding: 30px;
+  padding: 5px;
   /* background: #6fe1f5; */
   border-radius: 5px;
-}
-
-#file-upload h1 {
-  color: #6990f2;
-  font-size: 27px;
-  font-weight: 600;
-  text-align: center;
 }
 
 #file-upload #upload-form {
   height: 167px;
   display: flex;
-  margin: 30px 0;
+  margin: 20px 0px;
   cursor: pointer;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   border-radius: 5px;
-  border: 2px dashed #6990f2;
+  border: 2px dashed #3c85b6;
 }
 
 #file-upload #upload-form i {
   font-size: 50px;
-  color: #6990f2;
+  color: #3c85b6;
 }
 
 #file-upload #upload-form p {
   font-size: 16px;
   margin-top: 15px;
-  color: #6990f2;
+  color: #3c85b6;
+}
+
+#file-upload #upload-form[drop-active=True] {
+  border: 2px dashed #8bcbf6;
+}
+
+#file-upload #upload-form[drop-active=True] i {
+  color: #8bcbf6;
+}
+
+#file-upload #upload-form[drop-active=True] p {
+  color: #8bcbf6;
 }
 
 #file-input {
@@ -128,6 +153,10 @@ header {
 /* *************************** C). Recording Section *************************** */
 /* ***************************************************************************** */
 /* ***************************************************************************** */
+#recording-control {
+  padding: 5px;
+}
+
 [data-role="controls"] > button {
   margin: 50px auto;
   outline: none;
@@ -141,7 +170,7 @@ header {
   text-indent: -100em;
   cursor: pointer;
   box-shadow: 0px 5px 5px 2px rgba(0, 0, 0, 0.3) inset,
-      0px 0px 0px 30px #fff, 0px 0px 0px 35px #333;
+      0px 0px 0px 30px rgb(219, 219, 219), 0px 0px 0px 35px #333;
 }
 
 [data-role="controls"] > button:hover {
@@ -167,10 +196,25 @@ header {
   height: 100%;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   padding-top: 10px;
 }
 
+[data-role="predict-emotion-button"] {
+  background-color: #3c85b6;
+  width: 250px;
+  height: 60px;
+  border-radius: 20px;
+  border: 1px solid #04273e;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #04273e;
+  cursor: pointer;
+}
+
+[data-role="predict-emotion-button"]:hover {
+  background-color: #4d97c7;
+}
 
 
 
@@ -183,7 +227,7 @@ header {
 /* ***************************************************************************** */
 #audio-section {
   background-color: #4c474c;
-  background-image: linear-gradient(0deg, #4c474c 0%, #141414 100%);
+  background-image: linear-gradient(0deg, #4c474c 0%, #232323 100%);
   border-radius: 50px;
   margin: 15px;
   overflow-y: auto;
@@ -193,6 +237,10 @@ header {
   width: auto;
   height: auto;
   padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 20px;
 }
 
 [data-role="recordings"] > .audio-row > audio {
@@ -212,8 +260,6 @@ header {
   text-decoration: underline;
   background-color: #0093E9;
   background-image: linear-gradient(0deg, #0093E9 0%, #80D0C7 100%);
-  float: right;
-  margin-left: 20px;
   cursor: pointer;
 }
 
@@ -225,6 +271,31 @@ header {
   background-image: linear-gradient(180deg, #0093E9 0%, #80D0C7 100%);
 }
 
+[data-role="recordings"] > .audio-row > .emotion-result {
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-role="recordings"] > .audio-row .emotion-section-result {
+  list-style-type: none;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  margin: 5px;
+  /* padding: 2px 10px;
+  background-color: #0093E9;
+  background-image: linear-gradient(60deg, #0093E9 0%, #80D0C7 100%); */
+  border-radius: 20px;
+}
+
+[data-role="recordings"] > .audio-row .emotion-section-result > .time {
+  display: inline-block;
+}
+
+[data-role="recordings"] > .audio-row .emotion-section-result > .emotion {
+  display: inline-block;
+}
 
 
 

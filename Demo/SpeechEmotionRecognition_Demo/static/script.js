@@ -18,8 +18,10 @@ jQuery(document).ready(function () {
 			})
 		}
 	})
-	.fail(() => {
-		console.log('Failed');
+	.fail((xhr, textStatus, errorThrown) => {
+		let errMsg = 'Failed retrieving models from backend. Error: ' + xhr.responseText;
+		console.log(errMsg);
+		alert(errMsg);
 	});
 
 	var myRecorder = {
@@ -132,20 +134,73 @@ jQuery(document).ready(function () {
 			$('ul.emotion-result').empty();
 
 			// Show Predicted Result
-			if (response && response.data && response.data.length > 0) {
-				response.data.forEach(data => {
-					let emotion = data.emotion;
-					let name = data.name.replaceAll('.wav', '').replaceAll(' ', '-');
-					let section = data.section;
-					let sectionClass = section.replaceAll(':', '').replaceAll(' ', '');
-					let resultObject = $(`<ul class="${sectionClass}">${sectionClass}: ${emotion}</ul>`);
-					$(`ul#${name}`).append(resultObject);
+			if (response && response.status) {
+				if (response.status == 'ok') {
+					if (response.data.length > 0) {
+						response.data.forEach(data => {
+							let emotion = data.emotion;
+							let name = data.name.replaceAll('.wav', '').replaceAll(' ', '-');
+							let section = data.section;
+							let sectionClass = section.replaceAll(':', '').replaceAll(' ', '');
+							let colorA = '#8B8484'; // Darker
+							let colorB = '#B8B8B8'; // Lighter
 
-				});
+							if (emotion === 'Anger') {
+								// Red
+								colorA = '#E61E1E';
+								colorB = '#E18F89';
+							}
+							else if (emotion == 'Excitement') {
+								// Yellow
+								colorA = '#EBE300';
+								colorB = '#CBD080';
+							}
+							else if (emotion == 'Frustration') {
+								// Purple
+								colorA = '#AD01A7';
+								colorB = '#D67AC5';
+							}
+							else if (emotion == 'Happiness') {
+								// Green
+								colorA = '#00EB46';
+								colorB = '#76D0A2';
+							}
+							else if (emotion == 'Neutral') {
+								// Grey
+								colorA = '#AFBBB5';
+								colorB = '#DAE1DE';
+							}
+							else if (emotion == 'Sadness') {
+								// Blue
+								colorA = '#0093E9';
+								colorB = '#80D0C7';
+							}
+							let style = `background-color: ${colorA};background-image: linear-gradient(60deg, ${colorA} 0%, ${colorB} 100%);`
+							let resultObject = $(`
+								<li class="emotion-section-result ${sectionClass}" style="${style}">
+									<span class="time">${section}</span>
+									<span class="emotion">${emotion}</span>
+								</li>
+							`);
+							$(`ul#${name}`).append(resultObject);
+
+						});
+					}
+				}
+				else if (response.status == 'failed') {
+					console.log(response.errMsg);
+					alert(response.errMsg);
+				}
+				else if (response.status == 'warning') {
+					console.log(response.errMsg);
+				}
 			}
+			
 		})
-		.fail(() => {
-			console.log('Failed');
+		.fail((xhr, textStatus, errorThrown) => {
+			let errMsg = 'Request failed with error: ' + xhr.responseText;
+			console.log(errMsg);
+			alert(errMsg);
 		});
 	})
 
@@ -161,8 +216,6 @@ jQuery(document).ready(function () {
 		e.preventDefault();
 		e.stopPropagation();
 
-		console.log('hi');
-		console.log(e.target.files);
 		if (e.target.files && e.target.files.length > 0) {
 			const files = e.target.files;
 			storeFiles(files);
@@ -170,16 +223,26 @@ jQuery(document).ready(function () {
 	})
 
 	 // preventing page from redirecting
-	 $("#upload-form").on("dragover", e => {
+	 $('#upload-form').on('dragover', e => {
 		e.preventDefault();
 		e.stopPropagation();
 		
+		$('#upload-form').attr('drop-active', 'True');
 	 });
-	
-	 $("#upload-form").on("drop", e => {
+
+	$('#upload-form').on('dragleave', e => {
 		e.preventDefault();
 		e.stopPropagation();
-		console.log('drop');
+		console.log('leave');
+
+		$('#upload-form').attr('drop-active', 'False');
+	})
+	
+	 $('#upload-form').on('drop', e => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		$('#upload-form').attr('drop-active', 'False');
 
 		const files = e.originalEvent.dataTransfer.files;
 		storeFiles(files);
@@ -192,7 +255,10 @@ jQuery(document).ready(function () {
 			if (file.type !== 'audio/wav' && file.type !== 'audio/x-m4a'
 				&& file.type !== 'audio/mpeg' && file.type !== 'audio/ogg'
 				&& file.type !== 'audio/basic') {
-				console.log("Please only upload .wav, .m4a, .mp3, .ogg, .opus, or .au file type!");
+				
+				let errMsg = "Please only upload .wav, .m4a, .mp3, .ogg, .opus, or .au file type!";
+				console.log(errMsg);
+				alert(errMsg);
 			}
 			else {
 				// let dateName = new Date().toLocaleString('en-US', {
