@@ -105,12 +105,12 @@ class DataProcessing:
       self.sr.append(sr)
       self.recording_names.append(recording_name)
     
-    print('Data Loading and Extraction Completed!\n')
+    print('   Data Loading and Extraction Completed!')
   
   def processData(self):
     print('Processing data...')
     self.melProcessing()
-    print('Data Process Completed!\n')
+    print('   Data Process Completed!')
   
   def melProcessing(self):
     # Splitting and Padding Data

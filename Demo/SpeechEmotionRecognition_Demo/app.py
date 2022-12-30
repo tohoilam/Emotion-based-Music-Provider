@@ -78,7 +78,7 @@ def predict():
         print(f"Loading Model {modelName} from {app.config['MODEL_PATH']}/{folderName}...")
         modelDir = os.path.join(os.getcwd(), app.config['MODEL_PATH'], folderName)
         model = tf.keras.models.load_model(modelDir)
-        print('Model Loading Completed!\n')
+        print('   Model Loading Completed!')
       else:
         errMsg = 'Selected model not available in backed!'
         print('Failed: ' + errMsg)
