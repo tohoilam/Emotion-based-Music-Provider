@@ -11,29 +11,12 @@ body {
   display: grid;
   grid-template-columns: 20% 20% 60%;
   grid-template-rows: 15% 20% 45% 20%;
-  /* display: flex; */
-  /* justify-content: center; */
-  /* align-items: center; */
   height: 100vh;
   width: 100%;
   margin: 0;
 }
 
-header {
-  text-align: center;
-  padding-top: 15px;
-  grid-column: 1 / span 3;
-  grid-row: 1 / span 1;
-  font-size: 1.8rem;
-}
-
 #model-section {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-top: 10px;
   grid-column: 1 / span 2;
   grid-row: 2 / span 1;
 }
@@ -49,90 +32,51 @@ header {
 }
 
 #predict-button-section {
+  grid-column: 1 / span 2;
+  grid-row: 4 / span 1
+}
+
+#audio-section {
+  grid-column: 3 / span 1;
+  grid-row: 2 / span 3;
+}
+
+header {
+  text-align: center;
+  padding-top: 15px;
+  grid-column: 1 / span 3;
+  grid-row: 1 / span 1;
+  font-size: 1.8rem;
+}
+
+
+
+
+
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+/* ***************************** A). Model Section ***************************** */
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+#model-section {
   width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   padding-top: 10px;
-  grid-column: 1 / span 2;
-  grid-row: 4 / span 1;
 }
 
-/* Audio Recording Section */
-#audio-section {
-  background-color: #4c474c;
-  background-image: linear-gradient(0deg, #4c474c 0%, #141414 100%);
-  border-radius: 50px;
-  grid-column: 3 / span 1;
-  grid-row: 2 / span 3;
-  margin: 15px;
-  overflow-y: auto;
-}
 
-[data-role="controls"] > button {
-  margin: 50px auto;
-  outline: none;
-  display: block;
-  border: none;
-  background-color: #D9AFD9;
-  background-image: linear-gradient(0deg, #D9AFD9 0%, #97D9E1 100%);
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  text-indent: -100em;
-  cursor: pointer;
-  box-shadow: 0px 5px 5px 2px rgba(0, 0, 0, 0.3) inset,
-      0px 0px 0px 30px #fff, 0px 0px 0px 35px #333;
-}
 
-[data-role="controls"] > button:hover {
-  background-color: #ee7bee;
-  background-image: linear-gradient(0deg, #ee7bee 0%, #6fe1f5 100%);
-}
 
-[data-role="controls"] > button[data-recording="true"] {
-  background-color: #ff2038;
-  background-image: linear-gradient(0deg, #ff2038 0%, #b30003 100%);
-}
 
-[data-role="recordings"] > .audio-row {
-  width: auto;
-  height: auto;
-  padding: 20px;
-}
 
-[data-role="recordings"] > .audio-row > audio {
-  outline: none;
-}
-
-[data-role="recordings"] > .audio-row > a {
-  display: inline-block;
-  text-align: center;
-  line-height: 50px;
-  vertical-align: middle;
-  width: 50px;
-  height: 50px;
-  border-radius: 20px;
-  color: #fff;
-  font-weight: bold;
-  text-decoration: underline;
-  background-color: #0093E9;
-  background-image: linear-gradient(0deg, #0093E9 0%, #80D0C7 100%);
-  float: right;
-  margin-left: 20px;
-  cursor: pointer;
-}
-
-[data-role="recordings"] > .audio-row > a:hover {
-  text-decoration: none;
-}
-
-[data-role="recordings"] > .audio-row > a:active {
-  background-image: linear-gradient(180deg, #0093E9 0%, #80D0C7 100%);
-}
-
-/* File Upload Section */
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+/* ************************** B). File Upload Section ************************** */
+/* ***************************************************************************** */
+/* ***************************************************************************** */
 #file-upload {
   width: 100%;
   padding: 30px;
@@ -175,7 +119,140 @@ header {
   left: -100%;
 }
 
-#file-upload .upload-row {
+
+
+
+
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+/* *************************** C). Recording Section *************************** */
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+[data-role="controls"] > button {
+  margin: 50px auto;
+  outline: none;
+  display: block;
+  border: none;
+  background-color: #D9AFD9;
+  background-image: linear-gradient(0deg, #D9AFD9 0%, #97D9E1 100%);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  text-indent: -100em;
+  cursor: pointer;
+  box-shadow: 0px 5px 5px 2px rgba(0, 0, 0, 0.3) inset,
+      0px 0px 0px 30px #fff, 0px 0px 0px 35px #333;
+}
+
+[data-role="controls"] > button:hover {
+  background-color: #ee7bee;
+  background-image: linear-gradient(0deg, #ee7bee 0%, #6fe1f5 100%);
+}
+
+[data-role="controls"] > button[data-recording="true"] {
+  background-color: #ff2038;
+  background-image: linear-gradient(0deg, #ff2038 0%, #b30003 100%);
+}
+
+
+
+
+
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+/* ************************ D). Predict Button Section ************************* */
+/* ***************************************************************************** */
+#predict-button-section {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 10px;
+}
+
+
+
+
+
+
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+/* ***************************** E). Audio Section ***************************** */
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+#audio-section {
+  background-color: #4c474c;
+  background-image: linear-gradient(0deg, #4c474c 0%, #141414 100%);
+  border-radius: 50px;
+  margin: 15px;
+  overflow-y: auto;
+}
+
+[data-role="recordings"] > .audio-row {
+  width: auto;
+  height: auto;
+  padding: 20px;
+}
+
+[data-role="recordings"] > .audio-row > audio {
+  outline: none;
+}
+
+[data-role="recordings"] > .audio-row > a {
+  display: inline-block;
+  text-align: center;
+  line-height: 50px;
+  vertical-align: middle;
+  width: 50px;
+  height: 50px;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: bold;
+  text-decoration: underline;
+  background-color: #0093E9;
+  background-image: linear-gradient(0deg, #0093E9 0%, #80D0C7 100%);
+  float: right;
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+[data-role="recordings"] > .audio-row > a:hover {
+  text-decoration: none;
+}
+
+[data-role="recordings"] > .audio-row > a:active {
+  background-image: linear-gradient(180deg, #0093E9 0%, #80D0C7 100%);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+/* ************************** Progress Stuff (Backup) ************************** */
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+/* #file-upload .upload-row {
   background: #e9f0ff;
   margin-bottom: 10px;
   list-style: none;
@@ -249,5 +326,4 @@ header {
 #uploaded-area .fa-check {
   color: #6990f2;
   font-size: 16px;
-}
-
+} */
