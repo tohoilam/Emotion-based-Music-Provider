@@ -372,7 +372,7 @@ jQuery(document).ready(function () {
 		classFileName = classFileName.substring(0, classFileName.indexOf('.'));
 		var emotionObject = $(`<ul id="${classFileName}" class="emotion-result"></ul>`);
 	
-		var audioName = $(`<div class"audio-name">hi</div>`)
+		var audioName = $(`<div class"audio-name">${filename}</div>`)
 
 		// Wrap everything in a row
 		var holderObject = $('<div class="audio-holder"></div>')
