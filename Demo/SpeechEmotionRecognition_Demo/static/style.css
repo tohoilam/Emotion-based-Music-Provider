@@ -7,15 +7,23 @@
 }
 
 body {
-  position: absolute;
-  display: grid;
-  grid-template-columns: 18% 18% 64%;
-  grid-template-rows: 13% 15% 40% 32%;
   height: 100vh;
   width: 100%;
   margin: 0;
-  padding: 10px 40px;
   background-color: #101010;
+  position: relative
+}
+
+#container {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18% 18% 64%;
+  grid-template-rows: 13% 15% 40% 32%;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 10px 40px;
+  z-index: 1;
 }
 
 #model-section {
@@ -240,12 +248,20 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 10px 20px;
+  gap: 10px 10px;
 }
 
 [data-role="recordings"] > .audio-row > audio {
   outline: none;
+  height: 30px;
 }
+
+[data-role="recordings"] > .audio-row .audio-name {
+  color: white;
+  font-size: 1.2rem;
+  text-overflow: ellipsis;
+}
+
 
 [data-role="recordings"] > .audio-row > a {
   display: inline-block;
@@ -257,18 +273,41 @@ h1 {
   border-radius: 20px;
   color: #fff;
   font-weight: bold;
-  text-decoration: underline;
-  background-color: #0093E9;
-  background-image: linear-gradient(0deg, #0093E9 0%, #80D0C7 100%);
   cursor: pointer;
 }
 
-[data-role="recordings"] > .audio-row > a:hover {
-  text-decoration: none;
+[data-role="recordings"] > .audio-row > a.download {
+  text-decoration: underline;
+  background-color: #0093E9;
+  background-image: linear-gradient(0deg, #0093E9 0%, #80D0C7 100%);
 }
 
-[data-role="recordings"] > .audio-row > a:active {
+
+[data-role="recordings"] > .audio-row > a.download:hover {
+  font-size: 1.1rem;
+  background-color: #019bf4;
+  background-image: linear-gradient(0deg, #019bf4 0%, #75ebdd 100%);
+}
+
+[data-role="recordings"] > .audio-row > a.download:active {
   background-image: linear-gradient(180deg, #0093E9 0%, #80D0C7 100%);
+}
+
+[data-role="recordings"] > .audio-row > a.expand {
+  font-size: 1.8rem;
+  background-color: #00c63c;
+  background-image: linear-gradient(0deg, #00c63c 0%, #79c79f 100%);
+}
+
+
+[data-role="recordings"] > .audio-row > a.expand:hover {
+  font-size: 2rem;
+  background-color: #019bf4;
+  background-image: linear-gradient(0deg, #00d540 0%, #80d2a8 100%);
+}
+
+[data-role="recordings"] > .audio-row > a.expand:active {
+  background-image: linear-gradient(180deg, #00c63c 0%, #79c79f 100%);
 }
 
 [data-role="recordings"] > .audio-row > .emotion-result {
@@ -302,6 +341,82 @@ h1 {
 
 
 
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+/* **************************** F). Mel-Spectrogram **************************** */
+/* ***************************************************************************** */
+/* ***************************************************************************** */
+#mel-spectrogram-section {
+  position: fixed;
+  display: flex;
+  top: 0px;
+  height: 80vh;
+  width: 90vw;
+  margin: 14vh 5vw 6vh 5vw;
+  z-index: 10000;
+  background-color: #052c45;
+  border-radius: 30px;
+  overflow-x: auto;
+}
+
+#mel-spectrogram-section[show="True"] {
+  left: 0%;
+}
+
+#mel-spectrogram-section[show="False"] {
+  left: 100%;
+}
+
+#mel-spectrogram-section #close-mel-spectrogram {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 32px;
+  height: 32px;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  border: 1px solid black;
+  cursor: pointer;
+  background-color: #f58c8d;
+  /* color: red; */
+}
+
+#mel-spectrogram-section #close-mel-spectrogram:hover {
+  background-color: #fd6769;
+}
+
+#mel-spectrogram-section .predicted-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 30px;
+  height: 100%;
+}
+
+#mel-spectrogram-section .predicted-container .predicted-emotion {
+  color: rgb(193, 193, 193);
+}
+
+#mel-spectrogram-section .predicted-container .audio-filename {
+  color: rgb(193, 193, 193);
+}
+
+#mel-spectrogram-section .predicted-emotion {
+  text-align: center;
+}
+
+#mel-spectrogram-section .audio-filename {
+  text-align: center;
+  padding-bottom: 5px;
+}
+
+#mel-spectrogram-section .mel-spectrogram-image-container {
+  height: 100%;
+}
+
+#mel-spectrogram-section .mel-spectrogram-image-container .mel-spectrogram-image {
+  height: 100%;
+  width: auto;
+}
 
 
 

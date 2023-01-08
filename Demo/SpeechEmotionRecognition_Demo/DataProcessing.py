@@ -3,6 +3,12 @@ import numpy as np
 import tensorflow as tf
 from pydub import AudioSegment, effects
 import librosa
+import librosa.display
+import joblib
+import matplotlib.pyplot as plt
+# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+# from opensoundscape.audio import Audio
+# from opensoundscape.spectrogram import Spectrogram
 import noisereduce as nr
 import cv2
 
@@ -27,7 +33,7 @@ class DataProcessing:
     else:
       self.labels_name = labelsToInclude
       
-  def loadAndExtractTestData(self, path):
+  def loadAndExtractTestData(self, path, dataFileName=None):
     x_list = []
     sr_list = []
     recording_names = []
@@ -69,6 +75,9 @@ class DataProcessing:
           file_path = os.path.join(dirname, filename)
           os.remove(file_path)
     
+    if (dataFileName != None):
+      dataFileName = dataFileName[:dataFileName.find('.')] + '.wav'
+    
     # Load and extract audio
     for dirname, _, filenames in os.walk(data_path):
       for filename in filenames:
@@ -76,18 +85,19 @@ class DataProcessing:
         if (filename == 'desktop.ini' or filename == 'desktop.in.txt' or filename == '.DS_Store' or filename == '.DS'):
           continue
         
-        # Load Audio and x
-        wav_path = os.path.join(dirname, filename)
-        audio = AudioSegment.from_file(wav_path)
-        if (audio.frame_rate != 16000):
-          audio = audio.set_frame_rate(16000)
-        sr = audio.frame_rate
-        audio = effects.normalize(audio, headroom = 5.0) # TODO: Try other head room
-        x = np.array(audio.get_array_of_samples(), dtype = 'float32')
-        
-        x_list.append(x)
-        sr_list.append(sr)
-        recording_names.append(filename)
+        if (dataFileName == None or filename == dataFileName):
+          # Load Audio and x
+          wav_path = os.path.join(dirname, filename)
+          audio = AudioSegment.from_file(wav_path)
+          if (audio.frame_rate != 16000):
+            audio = audio.set_frame_rate(16000)
+          sr = audio.frame_rate
+          audio = effects.normalize(audio, headroom = 5.0) # TODO: Try other head room
+          x = np.array(audio.get_array_of_samples(), dtype = 'float32')
+          
+          x_list.append(x)
+          sr_list.append(sr)
+          recording_names.append(filename)
     
     self.extractTestData(x_list, sr_list, recording_names)
   
@@ -189,5 +199,35 @@ class DataProcessing:
     self.sr = sampling_rates
     self.recording_names = recording_names
   
+  def saveMelSpectrogramImage(self, path):
+    n_jobs=4
+    verbose=1
+    jobs = []
+    png_filenames = []
+    for i in range(len(self.x_test)):
+      x = self.x_test[i]
+      x = x.reshape(x.shape[0], x.shape[1])
+      sr = self.sr[i]
+      filename = self.recording_names[i][0]
+      
+      filename = filename[:filename.find('.')] + self.recording_names[i][1].replace(':', '').replace(' ', '') + '.png'
+      png_filenames.append(filename)
+      filepath = os.path.join(path, filename)
+      jobs.append(joblib.delayed(self.melSpecToImageProcess)(x, sr, filepath))
+    
+    images = joblib.Parallel(n_jobs=n_jobs, verbose=verbose)(jobs)
+    
+    return png_filenames
+    
   
+  def melSpecToImageProcess(self, x, sr, filepath):
+    # print(sr, filepath)
+    # librosa.display.specshow(x, sr=sr, x_axis='time', y_axis='mel')
+    # plt.colorbar(format='%+2.0f dB')
+    # plt.savefig(filepath)
+    
+    fig = plt.Figure()
+    ax = fig.add_subplot(111)
+    p = librosa.display.specshow(x, sr=sr, ax=ax, x_axis='time', y_axis='mel')
+    fig.savefig(filepath)
     

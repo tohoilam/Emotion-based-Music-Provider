@@ -13,84 +13,108 @@
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
-  <header>Speech Emotion Recognition</header>
-  <section id="model-section">
-    <select name="model-selection" id="model-selection">
-      <option disabled selected value> -- select a model -- </option>
-    </select>
-  </section>
-  <section id="file-upload">
-    <h1 class="file-upload-header">File Upload</h1>
-    <form id="upload-form" action="#" drop-active="False" >
-      <i class="fas fa-cloud-upload-alt"></i>
-      <p>Browse File to Upload</p>
-    </form>
-    <input type="file" id="file-input" multiple>
-  </section>
-  <section id="recording-section">
-    <h1 class="recording-header">Record</h1>
-    <div id="recording-control">
-      <div data-role="controls">
-        <button data-recording="">Record</button>
+  <div id="container">
+    <header>Speech Emotion Recognition</header>
+    <section id="model-section">
+      <select name="model-selection" id="model-selection">
+        <option disabled selected value> -- select a model -- </option>
+      </select>
+    </section>
+    <section id="file-upload">
+      <h1 class="file-upload-header">File Upload</h1>
+      <form id="upload-form" action="#" drop-active="False" >
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>Browse File to Upload</p>
+      </form>
+      <input type="file" id="file-input" multiple>
+    </section>
+    <section id="recording-section">
+      <h1 class="recording-header">Record</h1>
+      <div id="recording-control">
+        <div data-role="controls">
+          <button data-recording="">Record</button>
+        </div>
       </div>
-    </div>
-    
-  </section>
-  <section id="predict-button-section">
-    <button data-role="predict-emotion-button">Predict Emotion</button>
-  </section>
-  <section id="audio-section">
-    <div data-role="recordings">
-      <!-- <div class="audio-row">
-        <audio controls></audio>
-        <a>&#9660;</a>
-        <ul id="testing1" class="emotion-result">
-          <li class="emotion-section-result"><span class="time">00:00 - 00:04</span><span class="emotion">Frustration</span></li>
-        </ul>
+      
+    </section>
+    <section id="predict-button-section">
+      <button data-role="predict-emotion-button">Predict Emotion</button>
+    </section>
+    <section id="audio-section">
+      <div data-role="recordings">
+        <!-- <div class="audio-row">
+          <audio controls></audio>
+          <a class="download">&#9660;</a>
+          <a class="expand">&#x2B;</a>
+          <ul id="testing1" class="emotion-result">
+            <li class="emotion-section-result" style="background-color: #0093E9;background-image: linear-gradient(60deg, #0093E9 0%, #80D0C7 100%);"><span class="time">00:00 - 00:04</span><span class="emotion">Frustration</span></li>
+          </ul>
+        </div>
+        <div class="audio-row">
+          <audio controls></audio>
+          <a class="download">&#9660;</a>
+          <a class="expand">&#x2B;</a>
+          <ul id="testing2" class="emotion-result">
+            <li class="emotion-section-result" style="background-color: #0093E9;background-image: linear-gradient(60deg, #0093E9 0%, #80D0C7 100%);"><span class="time">00:00 - 00:04</span><span class="emotion">Happiness</span></li>
+            <li class="emotion-section-result" style="background-color: #0093E9;background-image: linear-gradient(60deg, #0093E9 0%, #80D0C7 100%);"><span class="time">00:04 - 00:08</span><span class="emotion">Anger</span></li>
+            <li class="emotion-section-result" style="background-color: #0093E9;background-image: linear-gradient(60deg, #0093E9 0%, #80D0C7 100%);"><span class="time">00:08 - 00:12</span><span class="emotion">Neutral</span></li>
+            <li class="emotion-section-result" style="background-color: #0093E9;background-image: linear-gradient(60deg, #0093E9 0%, #80D0C7 100%);"><span class="time">00:12 - 00:16</span><span class="emotion">Sadness</span></li>
+          </ul>
+        </div>
+        <div class="audio-row">
+          <audio controls></audio>
+          <a class="download">&#9660;</a>
+          <a class="expand">&#x2B;</a>
+          <ul id="testing3" class="emotion-result"></ul>
+        </div> -->
       </div>
-      <div class="audio-row">
-        <audio controls></audio>
-        <a>&#9660;</a>
-        <ul id="testing2" class="emotion-result">
-          <li class="emotion-section-result"><span class="time">00:00 - 00:04</span><span class="emotion">Happiness</span></li>
-          <li class="emotion-section-result"><span class="time">00:04 - 00:08</span><span class="emotion">Anger</span></li>
-          <li class="emotion-section-result"><span class="time">00:08 - 00:12</span><span class="emotion">Neutral</span></li>
-          <li class="emotion-section-result"><span class="time">00:12 - 00:16</span><span class="emotion">Sadness</span></li>
-        </ul>
-      </div>
-      <div class="audio-row">
-        <audio controls></audio>
-        <a>&#9660;</a>
-        <ul id="testing3" class="emotion-result"></ul>
-      </div> -->
-    </div>
-  </section>
+    </section>
 
-  <!-- <div id="upload-progress-area">
-      <li class="upload-row">
-        <i class="fas fa-file-alt"></i>
-        <div class="upload-content">
-          <div class="upload-details">
-            <span class="upload-name">audio.wav - Uploading</span>
-            <span class="upload-percent">50%</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress"></div>
-          </div>
-        </div>
-      </li>
-    </div>
-    <div id="uploaded-area">
-      <li class="upload-row">
-        <div class="upload-content">
+    <!-- <div id="upload-progress-area">
+        <li class="upload-row">
           <i class="fas fa-file-alt"></i>
-          <div class="upload-details">
-            <span class="name">audio.wav - Uploaded</span>
-            <span class="size">70 KB</span>
+          <div class="upload-content">
+            <div class="upload-details">
+              <span class="upload-name">audio.wav - Uploading</span>
+              <span class="upload-percent">50%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress"></div>
+            </div>
           </div>
+        </li>
+      </div>
+      <div id="uploaded-area">
+        <li class="upload-row">
+          <div class="upload-content">
+            <i class="fas fa-file-alt"></i>
+            <div class="upload-details">
+              <span class="name">audio.wav - Uploaded</span>
+              <span class="size">70 KB</span>
+            </div>
+          </div>
+          <i class="fas fa-check"></i>
+        </li>
+      </div>  -->
+  </div>
+  <section id="mel-spectrogram-section" show="False">
+    <button id="close-mel-spectrogram">X</button>
+    <!-- <div class="horizontal-scroll"> -->
+      <!-- <div class="predicted-container">
+        <h2 class="predicted-emotion">Frustration</h2>
+        <h3 class="audio-filename">jklfjds.wav</h3>
+        <div class="mel-spectrogram-image-container">
+          <img src="https://miro.medium.com/max/1400/1*zX-rizZKXXg7Ju-entot9g.png" alt="mel spectrogram image" class="mel-spectrogram-image" />
         </div>
-        <i class="fas fa-check"></i>
-      </li>
-    </div>  -->
+      </div>
+      <div class="predicted-container">
+        <h2 class="predicted-emotion">Frustration</h2>
+        <h3 class="audio-filename">jklfjds.wav</h3>
+        <div class="mel-spectrogram-image-container">
+          <img src="https://miro.medium.com/max/1400/1*zX-rizZKXXg7Ju-entot9g.png" alt="mel spectrogram image" class="mel-spectrogram-image" />
+        </div>
+      </div> -->
+    <!-- </div> -->
+  </section>
 </body>
 </html>

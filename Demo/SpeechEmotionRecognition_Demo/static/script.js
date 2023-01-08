@@ -100,6 +100,14 @@ jQuery(document).ready(function () {
 		}
 	});
 
+	$('#close-mel-spectrogram').click((e) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		$('#mel-spectrogram-section').attr('show', 'False');
+		$('#close-mel-spectrogram').nextAll().remove();
+	})
+
 
 	// Console Log Audio Data List
 	$('[data-role="predict-emotion-button"]').click((e) => {
@@ -126,8 +134,8 @@ jQuery(document).ready(function () {
 			dataType: 'json',
 			data: formData,
 			cache: false,
-        	contentType: false,
-        	processData: false,
+			contentType: false,
+			processData: false,
 		})
 		.done((response) => {
 			// Clear Previous Result
@@ -285,23 +293,102 @@ jQuery(document).ready(function () {
 				.attr('src', url);
 
 		// Prepare the download link
-		var downloadObject = $('<a>&#9660;</a>')
+		var downloadObject = $('<a class="download">&#9660;</a>')
 				.attr('href', url)
 				.attr('download', filename);
+		
+		var expandObject = $('<a class="expand">&#x2B;</a>')
+		expandObject.click(() => {
+			const modelChoice = $('#model-selection').val();
+			console.log(modelChoice);
+
+			var formData = new FormData();
+			formData.append('modelChoice', modelChoice);
+			formData.append('dataFileName', filename);
+
+			$.ajax(domain + '/mel-spectrogram', {
+				type: 'POST',
+				dataType: 'json',
+				data: formData,
+				cache: false,
+				contentType: false,
+				processData: false,
+			})
+			.done((response) => {
+				if (response && response.data) {
+					if (response.status == 'ok') {
+						if (response.data.length > 0) {
+							console.log(response.data);
+							for (let i = 0; i < response.data.length; i++) {
+								let data_object = response.data[i];
+								console.log(data_object.mel_spectrogram);
+								// let decoded = btoa(String.fromCharCode.apply(null, data_object.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" ")))
+								let imageSrc = 'data:image/png;base64,' + data_object.mel_spectrogram;
+
+								var predictedContainerObject = $('<div class="predicted-container"><div>');
+								var predictedEmotionObject = $(`<h2 class="predicted-emotion">${data_object.emotion}</h2>`)
+								var audioFileNameObject = $(`<h3 class="audio-filename">${data_object.name} ${data_object.section}</h3>`);
+								var melSpectrogramImageContainerObject = $(`<div class="mel-spectrogram-image-container"></div>`);
+								var imageObject = $('<img alt="mel spectrogram image" class="mel-spectrogram-image" />')
+											.attr('src', imageSrc);
+								
+								melSpectrogramImageContainerObject.append(imageObject);
+
+								predictedContainerObject.append(predictedEmotionObject)
+																				.append(audioFileNameObject)
+																				.append(melSpectrogramImageContainerObject);
+								
+								$('#mel-spectrogram-section').append(predictedContainerObject);
+								
+								$('#mel-spectrogram-section').attr('show', 'True');
+								
+								
+							}
+							
+						}
+						else {
+							errMsg = 'No mel-spectrogram image in response data';
+							console.log(errMsg);
+							alert(errMsg);
+						}
+					}
+					else if (response.status == 'failed') {
+						console.log(response.errMsg);
+						alert(response.errMsg);
+					}
+					else if (response.status == 'warning') {
+						console.log(response.errMsg);
+					}
+				}
+			})
+			.fail((xhr, textStatus, errorThrown) => {
+				let errMsg = 'Failed retrieving mel spectrogram images from backend. Error: ' + xhr.responseText;
+				console.log(errMsg);
+				alert(errMsg);
+			});
+		})
 		
 		let classFileName = filename.replaceAll(' ', '-');
 		classFileName = classFileName.substring(0, classFileName.indexOf('.'));
 		var emotionObject = $(`<ul id="${classFileName}" class="emotion-result"></ul>`);
 	
+		var audioName = $(`<div class"audio-name">hi</div>`)
 
 		// Wrap everything in a row
-		var holderObject = $('<div class="audio-row"></div>')
-				.append(audioObject)
-				.append(downloadObject)
-				.append(emotionObject);
+		var holderObject = $('<div class="audio-holder"></div>')
+						.append(audioName)
+						.append(audioObject);
+
+		var audioRowObject = $('<div class="audio-row"></div>')
+						.append(holderObject)
+						.append(downloadObject)
+						.append(expandObject)
+						.append(emotionObject);
+		
+
 
 		// Append to the list
-		listObject.append(holderObject);
+		listObject.append(audioRowObject);
 
 		blobList.push(blob);
 		filenameList.push(filename);

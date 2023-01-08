@@ -28,7 +28,10 @@ dataModel = DataProcessing(labelsToInclude=labelsToInclude, splitDuration=splitD
 dataModel.loadAndExtractTestData(path)
 dataModel.processData()
 
-y_pred = np.argmax(model.predict(dataModel.x_test), axis=1)
+prediction = model.predict(dataModel.x_test)
+y_pred = np.argmax(prediction, axis=1)
+print(prediction)
+
 
 print('Prediction Result:')
 for i, pred in enumerate(y_pred):
