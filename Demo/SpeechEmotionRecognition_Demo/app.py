@@ -152,7 +152,8 @@ def predict():
   
   # 5). Model Prediction
   try:
-    y_pred = np.argmax(model.predict(dataModel.x_test), axis=1)
+    y_percentages = model.predict(dataModel.x_test)
+    y_pred = np.argmax(y_percentages, axis=1)
   except Exception as e:
     errMsg = 'Emotion Prediction from Model Failed! ' + e
     print('Failed: ' + errMsg)
@@ -163,13 +164,20 @@ def predict():
   # 5). Pack and return
   predicted_data_list = []
   for i, pred in enumerate(y_pred):
+    y_percentage = y_percentages[i]
     predicted_label = dataModel.labels_name[pred]
     recording_name = dataModel.recording_names[i]
+    
+    percentage_dict = {}
+    for pos, percent in enumerate(y_percentage):
+      
+      percentage_dict[dataModel.labels_name[pos]] = float(percent)
   
     predicted_data_list.append({
       'name': recording_name[0],
       'section': recording_name[1],
-      'emotion': predicted_label
+      'emotion': predicted_label,
+      'percentage': percentage_dict
     })  
   
   return {'data': predicted_data_list, 'status': 'ok', 'errMsg': ''}

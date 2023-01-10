@@ -150,6 +150,14 @@ jQuery(document).ready(function () {
 							let name = data.name.replaceAll('.wav', '').replaceAll(' ', '-');
 							let section = data.section;
 							let sectionClass = section.replaceAll(':', '').replaceAll(' ', '');
+							let percentage = data.percentage;
+							let anger_percentage = percentage.Anger ? parseFloat(percentage.Anger) * 100 : 0.0;
+							let excitement_percentage = percentage.Excitement ? parseFloat(percentage.Excitement) * 100 : 0.0;
+							let frustration_percentage = percentage.Frustration ? parseFloat(percentage.Frustration) * 100 : 0.0;
+							let happiness_percentage = percentage.Happiness ? parseFloat(percentage.Happiness) * 100 : 0.0;
+							let sadness_percentage = percentage.Sadness ? parseFloat(percentage.Sadness) * 100 : 0.0;
+							let neutral_percentage = percentage.Neutral ? parseFloat(percentage.Neutral) * 100 : 0.0;
+
 							let colorA = '#8B8484'; // Darker
 							let colorB = '#B8B8B8'; // Lighter
 
@@ -185,9 +193,19 @@ jQuery(document).ready(function () {
 							}
 							let style = `background-color: ${colorA};background-image: linear-gradient(60deg, ${colorA} 0%, ${colorB} 100%);`
 							let resultObject = $(`
-								<li class="emotion-section-result ${sectionClass}" style="${style}">
-									<span class="time">${section}</span>
-									<span class="emotion">${emotion}</span>
+								<li class="emotion-container">
+									<div class="emotion-section-result ${sectionClass}" style="${style}">
+										<span class="time">${section}</span>
+										<span class="emotion">${emotion}</span>
+									</div>
+									<div class="emotion-percentages">
+										<div class="specific-emotion-percentage anger-emotion" style="width: ${anger_percentage}%;">${anger_percentage >= 10 ? anger_percentage.toFixed(1).toString() + "%" : ""}</div>
+										<div class="specific-emotion-percentage excitement-emotion" style="width: ${excitement_percentage}%;">${excitement_percentage >= 10 ? excitement_percentage.toFixed(1).toString() + "%" : ""}</div>
+										<div class="specific-emotion-percentage frustration-emotion" style="width: ${frustration_percentage}%;">${frustration_percentage >= 10 ? frustration_percentage.toFixed(1).toString() + "%" : ""}</div>
+										<div class="specific-emotion-percentage happiness-emotion" style="width: ${happiness_percentage}%;">${happiness_percentage >= 10 ? happiness_percentage.toFixed(1).toString() + "%" : ""}</div>
+										<div class="specific-emotion-percentage sadness-emotion" style="width: ${sadness_percentage}%;">${sadness_percentage >= 10 ? sadness_percentage.toFixed(1).toString() + "%" : ""}</div>											
+										<div class="specific-emotion-percentage neutral-emotion" style="width: ${neutral_percentage}%;">${neutral_percentage >= 10 ? neutral_percentage.toFixed(1).toString() + "%" : ""}</div>
+									</div>
 								</li>
 							`);
 							$(`ul#${name}`).append(resultObject);
@@ -372,14 +390,14 @@ jQuery(document).ready(function () {
 		classFileName = classFileName.substring(0, classFileName.indexOf('.'));
 		var emotionObject = $(`<ul id="${classFileName}" class="emotion-result"></ul>`);
 	
-		var audioName = $(`<div class"audio-name">${filename}</div>`)
+		var audioName = $(`<div class="audio-name">${filename}</div>`)
 
 		// Wrap everything in a row
 		var holderObject = $('<div class="audio-holder"></div>')
-						.append(audioName)
 						.append(audioObject);
 
 		var audioRowObject = $('<div class="audio-row"></div>')
+						.append(audioName)
 						.append(holderObject)
 						.append(downloadObject)
 						.append(expandObject)
