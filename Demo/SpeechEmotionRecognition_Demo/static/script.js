@@ -353,7 +353,7 @@ jQuery(document).ready(function () {
 								// let decoded = btoa(String.fromCharCode.apply(null, data_object.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" ")))
 								let imageSrc = 'data:image/png;base64,' + data_object.mel_spectrogram;
 
-								var predictedContainerObject = $('<div class="predicted-container"><div>');
+								var predictedContainerObject = $('<div class="predicted-container"></div>');
 								var predictedEmotionObject = $(`<h2 class="predicted-emotion">${data_object.emotion}</h2>`)
 								var audioFileNameObject = $(`<h3 class="audio-filename">${data_object.name} ${data_object.section}</h3>`);
 								var melSpectrogramImageContainerObject = $(`<div class="mel-spectrogram-image-container"></div>`);

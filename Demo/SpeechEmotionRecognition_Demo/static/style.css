@@ -486,8 +486,7 @@ h1 {
 }
 
 #mel-spectrogram-section .predicted-container {
-  display: flex;
-  flex-direction: column;
+  display: inline-block;
   padding: 20px 30px;
   height: 100%;
 }
@@ -510,7 +509,7 @@ h1 {
 }
 
 #mel-spectrogram-section .mel-spectrogram-image-container {
-  height: 100%;
+  height: calc(100% - 35px - 34px);;
 }
 
 #mel-spectrogram-section .mel-spectrogram-image-container .mel-spectrogram-image {
