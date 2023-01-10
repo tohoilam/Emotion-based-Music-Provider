@@ -114,6 +114,8 @@ jQuery(document).ready(function () {
 		e.preventDefault();
 		e.stopPropagation();
 
+		loadScreen(true);
+
 		const url = domain + "/predict";
 
 		const modelChoice = $('#model-selection').val();
@@ -140,6 +142,8 @@ jQuery(document).ready(function () {
 		.done((response) => {
 			// Clear Previous Result
 			$('ul.emotion-result').empty();
+
+			loadScreen(false);
 
 			// Show Predicted Result
 			if (response && response.status) {
@@ -224,6 +228,8 @@ jQuery(document).ready(function () {
 			
 		})
 		.fail((xhr, textStatus, errorThrown) => {
+			loadScreen(false);
+
 			let errMsg = 'Request failed with error: ' + xhr.responseText;
 			console.log(errMsg);
 			alert(errMsg);
@@ -317,8 +323,10 @@ jQuery(document).ready(function () {
 		
 		var expandObject = $('<a class="expand">&#x2B;</a>')
 		expandObject.click(() => {
+
+			loadScreen(true);
+
 			const modelChoice = $('#model-selection').val();
-			console.log(modelChoice);
 
 			var formData = new FormData();
 			formData.append('modelChoice', modelChoice);
@@ -333,6 +341,8 @@ jQuery(document).ready(function () {
 				processData: false,
 			})
 			.done((response) => {
+				loadScreen(false);
+
 				if (response && response.data) {
 					if (response.status == 'ok') {
 						if (response.data.length > 0) {
@@ -380,6 +390,8 @@ jQuery(document).ready(function () {
 				}
 			})
 			.fail((xhr, textStatus, errorThrown) => {
+				loadScreen(false);
+
 				let errMsg = 'Failed retrieving mel spectrogram images from backend. Error: ' + xhr.responseText;
 				console.log(errMsg);
 				alert(errMsg);
@@ -410,5 +422,14 @@ jQuery(document).ready(function () {
 
 		blobList.push(blob);
 		filenameList.push(filename);
+	}
+
+	var loadScreen = (isLoading) => {
+		if (isLoading) {
+			$('#loading').attr('loading-active', 'True')
+		}
+		else {
+			$('#loading').attr('loading-active', 'False')
+		}
 	}
 });

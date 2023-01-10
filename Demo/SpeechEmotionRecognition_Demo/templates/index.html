@@ -13,6 +13,9 @@
   <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
+  <div id="loading" loading-active="False">
+    <div id="loader"></div>
+  </div>
   <div id="container">
     <header>Speech Emotion Recognition</header>
     <section id="model-section">
@@ -142,7 +145,7 @@
       </div>  -->
   </div>
   <section id="mel-spectrogram-section" show="False">
-    <button id="close-mel-spectrogram">X</button>
+    <button id="close-mel-spectrogram"><span>X</span></button>
     <!-- <div class="horizontal-scroll"> -->
       <!-- <div class="predicted-container">
         <h2 class="predicted-emotion">Frustration</h2>

@@ -200,8 +200,8 @@ class DataProcessing:
     self.recording_names = recording_names
   
   def saveMelSpectrogramImage(self, path):
-    n_jobs=4
-    verbose=1
+    n_jobs=1
+    verbose=0
     jobs = []
     png_filenames = []
     for i in range(len(self.x_test)):
@@ -229,5 +229,6 @@ class DataProcessing:
     fig = plt.Figure()
     ax = fig.add_subplot(111)
     p = librosa.display.specshow(x, sr=sr, ax=ax, x_axis='time', y_axis='mel')
+    fig.colorbar(p, format='%+2.0f dB')
     fig.savefig(filepath)
     

@@ -51,6 +51,34 @@ body {
   grid-row: 2 / span 3;
 }
 
+#loading {
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  z-index: 10000;
+  background-color: rgba(0, 0, 0, 0.571);
+}
+
+#loader {
+  border: 5px solid #f3f3f3; /* Light grey */
+  border-top: 5px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  margin: auto;
+  margin-top: 45vh;
+  animation: spin 0.7s linear infinite;
+}
+
+#loading[loading-active="False"] {
+  left: -100%;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 header {
   text-align: center;
   padding-top: 15px;
@@ -224,6 +252,10 @@ h1 {
   background-color: #4d97c7;
 }
 
+[data-role="predict-emotion-button"]:active {
+  background-color: #91cdf6;
+}
+
 
 
 
@@ -260,7 +292,7 @@ h1 {
 }
 
 [data-role="recordings"] > .audio-row .audio-name {
-  color: rgb(209, 209, 209);
+  color: #91cdf6;
   font-weight: bold;
   font-size: 1.4rem;
   text-overflow: ellipsis;
@@ -409,7 +441,7 @@ h1 {
   height: 80vh;
   width: 90vw;
   margin: 14vh 5vw 6vh 5vw;
-  z-index: 10000;
+  z-index: 100;
   background-color: #052c45;
   border-radius: 30px;
   overflow-x: auto;
@@ -424,21 +456,33 @@ h1 {
 }
 
 #mel-spectrogram-section #close-mel-spectrogram {
-  position: absolute;
-  right: 20px;
+  position: sticky;
+  left: 20px;
   top: 20px;
   width: 32px;
   height: 32px;
   font-size: 1.2rem;
   border-radius: 5px;
-  border: 1px solid black;
+  color: #012945;
+  border: 1px solid #012945;
   cursor: pointer;
-  background-color: #f58c8d;
-  /* color: red; */
+  background-color: #3c85b6;
+}
+
+#mel-spectrogram-section #close-mel-spectrogram > span {
+  width: 32px;
+  height: 32px;
+  display: block;
+  font-family: sans-serif;
+  padding-top: 4px;
 }
 
 #mel-spectrogram-section #close-mel-spectrogram:hover {
-  background-color: #fd6769;
+  background-color: #4d97c7;
+}
+
+#mel-spectrogram-section #close-mel-spectrogram:active {
+  background-color: #91cdf6;
 }
 
 #mel-spectrogram-section .predicted-container {
@@ -449,7 +493,7 @@ h1 {
 }
 
 #mel-spectrogram-section .predicted-container .predicted-emotion {
-  color: rgb(193, 193, 193);
+  color: #91cdf6;
 }
 
 #mel-spectrogram-section .predicted-container .audio-filename {
