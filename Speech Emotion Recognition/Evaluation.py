@@ -2,6 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pytz
+import seaborn as sns
 
 import tensorflow as tf
 from tensorflow.core.util import event_pb2
@@ -132,20 +133,31 @@ class Evaluation:
     plt.legend()
     plt.show()
 
-  def confusionMatrix(self, title="", titleFontSize=18):
+  def confusionMatrix(self, title="", titleFontSize=15):
     if (title == ""):
       title = "Confusion Matrix " + self.logDir.split('/')[-1]
     
     confusion_matrix = metrics.confusion_matrix(self.y_test, self.y_pred)
-
-    cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels=self.labels_name)
-
-    cm_display.plot()
+    confusion_matrix_percent = confusion_matrix.astype('float') / confusion_matrix.sum(axis=1)[:, np.newaxis]
+    
+    fig, ax = plt.subplots(figsize=(10,8))
+    sns.heatmap(confusion_matrix_percent, annot=True, fmt='.2f', xticklabels=self.labels_name, yticklabels=self.labels_name, cmap="viridis")
     plt.title(title, fontsize=titleFontSize)
-    plt.xticks(rotation=40)
-    plt.xlabel('Predicted')
-    plt.ylabel('True')
-    plt.show()
+    plt.xticks(rotation=40, fontsize=13)
+    plt.yticks(rotation=0, fontsize=13)
+    plt.xlabel('Predicted', fontsize=13)
+    plt.ylabel('True', fontsize=13)
+    plt.show(block=False)
+
+
+    # cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels=self.labels_name)
+
+    # cm_display.plot()
+    # plt.title(title, fontsize=titleFontSize)
+    # plt.xticks(rotation=40)
+    # plt.xlabel('Predicted')
+    # plt.ylabel('True')
+    # plt.show()
   
   def classificationReport(self):
     report = metrics.classification_report(self.y_test, self.y_pred)

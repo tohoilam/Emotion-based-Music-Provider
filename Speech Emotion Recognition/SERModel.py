@@ -12,7 +12,7 @@ tz = pytz.timezone('Asia/Hong_Kong')
 # ( (D + 2 * padding - K) / stride ) + 1
 
 class SERModel:
-  def __init__(self, modelName, experimentName, ySize=9, learning_rate=0.0001, decay=0.001):
+  def __init__(self, modelName, experimentName, ySize=9, optimizerChoice='adam', learning_rate=0.0001, decay=0.001, lossChoice='scce', input_shape=None, activation='relu'):
     self.experimentName = datetime.now(tz=tz).strftime("%m-%d %Hh%Mm%Ss ") + experimentName
 
     self.logDir = os.path.join(os.getcwd(), "IEMOCAP_ModelLog", self.experimentName)
@@ -24,6 +24,12 @@ class SERModel:
       model = self.cnnModelA()
     elif (modelName.upper() == "cnnModelB".upper()):
       model = self.cnnModelB()
+    elif (modelName.upper() == "cnnModelBstft".upper()):
+      model = self.cnnModelBstft(input_shape)
+    elif (modelName.upper() == "cnnModelBstftRegL1".upper()):
+      model = self.cnnModelBstftRegL1(input_shape)
+    elif (modelName.upper() == "cnnModelBstftRegL2".upper()):
+      model = self.cnnModelBstftRegL2(input_shape, activation=activation)
     elif (modelName.upper() == "cnnModelC".upper()):
       model = self.cnnModelC()
     elif (modelName.upper() == "cnnModelD".upper()):
@@ -46,10 +52,26 @@ class SERModel:
     
     self.tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=self.logDir)
     
-    optimizer= tf.keras.optimizers.Adam(learning_rate=learning_rate, decay=decay)
+    if (optimizerChoice == 'adam'):
+      optimizer= tf.keras.optimizers.Adam(learning_rate=learning_rate, decay=decay)
+    elif (optimizerChoice == 'rmsprop'):
+      optimizer = tf.keras.optimizers.RMSprop(learning_rate=learning_rate, decay=decay)
+    elif (optimizerChoice == 'adagrad'):
+      optimizer = tf.keras.optimizers.Adagrad(learning_rate=learning_rate, decay=decay)
+    else:
+      optimizer = None
+      raise NameError("optimizerChoice does not exist.")
+    
+    if (lossChoice == 'scce'):
+      loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    elif (lossChoice == 'cce'):
+      loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
+    else:
+      loss = None
+      raise NameError("lossChoice does not exist.")
 
     model.compile(optimizer=optimizer,
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  loss=loss,
                   metrics=['accuracy'])
     
     self.model = model
@@ -65,7 +87,7 @@ class SERModel:
     print(f"    Experiment Name  : {self.experimentName}")
     print(f"    Log Directory    : {self.logDir}")
     print(f"    Result Directory : {self.resultDir}")
-    print(f"    Optimizer        : Adam")
+    print(f"    Optimizer        : {optimizerChoice}")
     print(f"      Learning Rate  : {learning_rate}")
     print(f"      Decay          : {decay}")
     print(f"    Loss             : Sparse Categorical Crossentropy")
@@ -73,7 +95,7 @@ class SERModel:
     print('')
     
   
-  def fit(self, x_train, y_train, epochs, validation_percent, batch_size=128, shuffle=True):
+  def fit(self, x_train, y_train, epochs, validation_percent, batch_size=128, shuffle=True, early_stopping_patience=0, k_fold=0):
     print("Model Information:")
     print(f"    Epochs        : {epochs}")
     print(f"    x_train shape : {x_train.shape}")
@@ -84,7 +106,11 @@ class SERModel:
 
     print('')
     print('Start training...')
-    history = self.model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=validation_percent, callbacks=[self.tensorboard_callback], shuffle=shuffle)
+    if (early_stopping_patience == 0):
+      history = self.model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=validation_percent, callbacks=[self.tensorboard_callback], shuffle=shuffle)
+    else:
+      callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=early_stopping_patience)
+      history = self.model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=validation_percent, callbacks=[self.tensorboard_callback, callback], shuffle=shuffle)
     self.model.save(self.resultDir)
     
     print('')
@@ -128,6 +154,43 @@ class SERModel:
       tf.keras.layers.Dense(2048, activation='relu'),
       tf.keras.layers.Dropout(0.5),
       tf.keras.layers.Dense(2048, activation='relu'),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+  
+  # Use L1 Regularization
+  def cnnModelBstftRegL1(self, input_shape):
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation='relu', input_shape=input_shape),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (5, 5), strides=(1, 1), activation='relu', kernel_regularizer=tf.keras.regularizers.l1(l=0.01)),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(2048, activation='relu', kernel_regularizer=tf.keras.regularizers.l1(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(2048, activation='relu'),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+  
+  # Use L2 Regularization
+  def cnnModelBstftRegL2(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation=activation, input_shape=input_shape),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (5, 5), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(2048, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(2048, activation=activation),
       tf.keras.layers.Dropout(0.5),
       tf.keras.layers.Dense(self.ySize, activation='softmax')
     ])
@@ -297,7 +360,7 @@ class SERModel:
       TimeDistributed(tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2))),                        #  4,  4, 384
       TimeDistributed(tf.keras.layers.Flatten()),                                                   #      1, 6144
       # tf.keras.layers.Reshape((6144, 1)),                                          #      1, 6144
-      tf.keras.layers.LSTM(1024, activation="tanh", return_sequences=False, input_shape=(1, 6144)),  #      1, 2048
+      tf.keras.layers.LSTM(1024, activation="tanh", return_sequences=False),  #      1, 2048
       tf.keras.layers.LSTM(256),                                                                    #      1, 256
       # tf.keras.layers.Dense(256, activation='relu'),                                                       #      1, 256
       tf.keras.layers.Dense(self.ySize, activation='softmax')                                       #      1, ySize

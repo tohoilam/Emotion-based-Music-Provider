@@ -10,7 +10,7 @@ import pytz
 import cv2
 import random
 
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore')
 tz = pytz.timezone('Asia/Hong_Kong')
 
 class DataModel:
-  def __init__(self, labelsToInclude=[], mergeHappinessExcitement=False, splitDuration=8, ignoreDuration=1, transformByStft=False, hop_length=512, win_length=2048, n_mels=128):
+  def __init__(self, labelsToInclude=[], mergeHappinessExcitement=False, splitDuration=8, ignoreDuration=1, transformByStft=False, hop_length=512, win_length=2048, n_mels=128, onehot=False, timeDistributed=False):
     # Hyperparameter
     self.splitDuration = splitDuration
     self.ignoreDuration = ignoreDuration
@@ -30,9 +30,11 @@ class DataModel:
     self.hop_length = hop_length
     self.win_length = win_length
     self.n_mels = n_mels
+    self.onehot = onehot
+    self.timeDistributed = timeDistributed
 
     if (labelsToInclude == []):
-      self.labels_name = ['Neutral', 'Frustration', 'Anger', 'Sadness', 'Happiness', 'Excitement', 'Surprise', 'Disgust', 'Fear']
+      self.labels_name = ['Anger', 'Disgust', 'Excitement', 'Fear', 'Frustration', 'Happiness', 'Neutral', 'Sadness', 'Surprise']
     else:
       self.labels_name = labelsToInclude
     
@@ -533,7 +535,10 @@ class DataModel:
 
     x_images = [ x for x in x_images ]
     x_images = np.asarray(x_images)
-    x_images = x_images.reshape(x_images.shape[0], x_images.shape[1], x_images.shape[2], 1)
+    if (self.timeDistributed):
+      x_images = x_images.reshape(1, x_images.shape[0], x_images.shape[1], x_images.shape[2], 1)
+    else:
+      x_images = x_images.reshape(x_images.shape[0], x_images.shape[1], x_images.shape[2], 1)
     thisData = x_images
     
     if (not testing):
@@ -557,6 +562,12 @@ class DataModel:
       encoder = LabelEncoder()
       encoder.fit(self.labels_name)
       self.labels = encoder.transform(self.labels)
+      
+      if (self.onehot):
+        # One Hot Encoding
+        encoder = OneHotEncoder()
+        self.labels = encoder.fit_transform(self.labels.reshape(-1,1)).toarray()
+      
       self.sampling_rates = np.asarray(self.sampling_rates)
       
       print('Label Processing For Training Completed')
@@ -566,7 +577,13 @@ class DataModel:
       # Label Encoding
       encoder = LabelEncoder()
       encoder.fit(self.labels_name)
-      self.test_labels = np.asarray(encoder.transform(self.test_labels))
+      self.test_labels = encoder.transform(self.test_labels)
+      
+      if (self.onehot):
+        # One Hot Encoding
+        encoder = OneHotEncoder()
+        self.test_labels = encoder.fit_transform(self.test_labels.reshape(-1,1)).toarray()
+      
       self.test_sampling_rates = np.asarray(self.test_sampling_rates)
     
       print('Label Processing For Testing Completed')
