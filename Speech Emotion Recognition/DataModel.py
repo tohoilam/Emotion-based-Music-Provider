@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore')
 tz = pytz.timezone('Asia/Hong_Kong')
 
 class DataModel:
-  def __init__(self, labelsToInclude=[], mergeHappinessExcitement=False, splitDuration=8, ignoreDuration=1, transformByStft=False, hop_length=512, win_length=2048, n_mels=128, onehot=False, timeDistributed=False):
+  def __init__(self, labelsToInclude=[], mergeHappinessExcitement=False, splitDuration=8, ignoreDuration=1, transformByStft=False, hop_length=512, win_length=2048, n_mels=128, onehot=False, timeDistributed=False, timeShape=False):
     # Hyperparameter
     self.splitDuration = splitDuration
     self.ignoreDuration = ignoreDuration
@@ -32,6 +32,7 @@ class DataModel:
     self.n_mels = n_mels
     self.onehot = onehot
     self.timeDistributed = timeDistributed
+    self.timeShape = timeShape
 
     if (labelsToInclude == []):
       self.labels_name = ['Anger', 'Disgust', 'Excitement', 'Fear', 'Frustration', 'Happiness', 'Neutral', 'Sadness', 'Surprise']
@@ -525,6 +526,9 @@ class DataModel:
       
       # Free up memory from data
       thisData[i] = None
+      
+      if (self.timeShape):
+        mel_spec = mel_spec.T
 
       x_images.append(mel_spec)
       
@@ -578,11 +582,6 @@ class DataModel:
       encoder = LabelEncoder()
       encoder.fit(self.labels_name)
       self.test_labels = encoder.transform(self.test_labels)
-      
-      if (self.onehot):
-        # One Hot Encoding
-        encoder = OneHotEncoder()
-        self.test_labels = encoder.fit_transform(self.test_labels.reshape(-1,1)).toarray()
       
       self.test_sampling_rates = np.asarray(self.test_sampling_rates)
     

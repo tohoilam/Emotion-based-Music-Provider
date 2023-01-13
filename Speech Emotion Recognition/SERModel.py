@@ -46,6 +46,10 @@ class SERModel:
       model = self.cnnLstmModelD()
     elif (modelName.upper() == "optimal".upper()):
       model = self.optimal()
+    elif (modelName.upper() == "cnnLstmModelBstftRegL2".upper()):
+      model = self.cnnLstmModelBstftRegL2(input_shape, activation=activation)
+    elif (modelName.upper() == "cnnLstmModelBstftRegL2Repeat".upper()):
+      model = self.cnnLstmModelBstftRegL2Repeat(input_shape, activation=activation)
     else:
       model = None
       raise NameError("modelName does not exist. Should be cnnModel{A-E} or cnnLstmModel{A-D}")
@@ -367,6 +371,54 @@ class SERModel:
     ])
     
     return model
+  
+  # Add Repeat Vector
+  def cnnLstmModelBstftRegL2Repeat(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation=activation, input_shape=input_shape),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (5, 5), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Flatten(),
+      tf.keras.layers.RepeatVector(4),
+      tf.keras.layers.LSTM(1024, activation="tanh", return_sequences=False),
+      tf.keras.layers.Dense(2048, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(2048, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+  
+  # Add Repeat Vector
+  def cnnLstmModelBstftRegL2(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation=activation, input_shape=input_shape),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (5, 5), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Reshape((4, 1024)),
+      tf.keras.layers.LSTM(1024, activation="tanh", return_sequences=False),
+      tf.keras.layers.Dense(2048, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(2048, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+  
   
   # # CNN LSTM Baseline from Article
   # def optimal(self):
