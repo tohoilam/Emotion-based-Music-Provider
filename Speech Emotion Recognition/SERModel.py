@@ -2,7 +2,7 @@ import os
 import pytz
 import tensorflow as tf
 import tensorboard
-from tensorflow.keras.layers import TimeDistributed
+from tensorflow.keras.layers import TimeDistributed, Bidirectional
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
@@ -12,13 +12,16 @@ tz = pytz.timezone('Asia/Hong_Kong')
 # ( (D + 2 * padding - K) / stride ) + 1
 
 class SERModel:
-  def __init__(self, modelName, experimentName, ySize=9, optimizerChoice='adam', learning_rate=0.0001, decay=0.001, lossChoice='scce', input_shape=None, activation='relu'):
+  def __init__(self, modelName, experimentName, ySize=9, optimizerChoice='adam', learning_rate=0.0001, decay=0.001, lossChoice='scce', input_shape=None, activation='relu', firstLayer=11, firstStride=4):
     self.experimentName = datetime.now(tz=tz).strftime("%m-%d %Hh%Mm%Ss ") + experimentName
 
     self.logDir = os.path.join(os.getcwd(), "IEMOCAP_ModelLog", self.experimentName)
     self.resultDir = os.path.join(os.getcwd(), "IEMOCAP_TrainedModel", self.experimentName)
     
     self.ySize = ySize
+    
+    self.firstLayer = firstLayer
+    self.firstStride = firstStride
     
     if (modelName.upper() == "cnnModelA".upper()):
       model = self.cnnModelA()
@@ -30,6 +33,16 @@ class SERModel:
       model = self.cnnModelBstftRegL1(input_shape)
     elif (modelName.upper() == "cnnModelBstftRegL2".upper()):
       model = self.cnnModelBstftRegL2(input_shape, activation=activation)
+    elif (modelName.upper() == "bestCNNModel".upper()):
+      model = self.bestCNNModel(input_shape, activation=activation)
+    elif (modelName.upper() == "bestCNNModelLstm".upper()):
+      model = self.bestCNNModelLstm(input_shape, activation=activation)
+    elif (modelName.upper() == "bestCNNModelLstmB".upper()):
+      model = self.bestCNNModelLstmB(input_shape, activation=activation)
+    elif (modelName.upper() == "bestCNNModelLstmC".upper()):
+      model = self.bestCNNModelLstmC(input_shape, activation=activation)
+    elif (modelName.upper() == "bestCNNModelWideLstmC".upper()):
+      model = self.bestCNNModelWideLstmC(input_shape, activation=activation)
     elif (modelName.upper() == "cnnModelC".upper()):
       model = self.cnnModelC()
     elif (modelName.upper() == "cnnModelD".upper()):
@@ -195,6 +208,180 @@ class SERModel:
       tf.keras.layers.Dense(2048, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
       tf.keras.layers.Dropout(0.5),
       tf.keras.layers.Dense(2048, activation=activation),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+  
+    # Use L2 Regularization
+  def cnnModelBstftRegL2LayerExperiment(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (self.firstLayer, self.firstLayer), strides=(self.firstStride, self.firstStride), activation=activation, input_shape=input_shape),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (5, 5), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(2048, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(2048, activation=activation),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+
+    # Use L2 Regularization
+  def cnnModelBstftRegL2LayerExperiment(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (self.firstLayer, self.firstLayer), strides=(self.firstStride, self.firstStride), activation=activation, input_shape=input_shape),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(512, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(1024, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(2048, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(2048, activation=activation),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+
+  # Best CNN Model
+  def bestCNNModel(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (3, 3), strides=(2, 2), activation=activation, input_shape=input_shape),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(512, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(1024, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(2048, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(2048, activation=activation),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+  
+    # Best CNN Model
+  def bestCNNModelLstm(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (3, 3), strides=(2, 2), activation=activation, input_shape=input_shape),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(512, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(1024, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Reshape((6, 2048)),
+      tf.keras.layers.LSTM(1024, activation="tanh", return_sequences=False),
+      tf.keras.layers.Dense(512, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(128, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+
+    # Best CNN Model
+  def bestCNNModelLstmB(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (3, 3), strides=(2, 2), activation=activation, input_shape=input_shape),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(512, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(1024, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Reshape((6, 2048)),
+      Bidirectional(tf.keras.layers.LSTM(512, activation="tanh", return_sequences=False)),
+      tf.keras.layers.Dense(256, activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(128, activation=activation),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+  
+  # Best CNN Model LSTM C
+  def bestCNNModelLstmC(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (3, 3), strides=(2, 2), activation=activation, input_shape=input_shape),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(512, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Conv2D(1024, (3, 3), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)),
+      tf.keras.layers.Reshape((6, 2048)),
+      Bidirectional(tf.keras.layers.LSTM(256, activation="tanh", return_sequences=False)),
+      tf.keras.layers.Dense(256, activation='relu'),
+      tf.keras.layers.Dropout(0.5),
+      tf.keras.layers.Dense(self.ySize, activation='softmax')
+    ])
+    
+    return model
+
+  # Best CNN Wide Model Lstm C
+  def bestCNNModelWideLstmC(self, input_shape, activation='relu'):
+    if (activation == 'leakyrelu'):
+      activation = tf.keras.layers.LeakyReLU(alpha=0.01)
+    
+    model = tf.keras.Sequential([
+      tf.keras.layers.Conv2D(120, (11, 11), strides=(4, 4), activation=activation, input_shape=input_shape),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Conv2D(256, (5, 5), strides=(1, 1), activation=activation, kernel_regularizer=tf.keras.regularizers.l2(l=0.01)),
+      tf.keras.layers.BatchNormalization(axis=-1),
+      tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+      tf.keras.layers.Reshape((12, 1024)),
+      Bidirectional(tf.keras.layers.LSTM(256, activation="tanh", return_sequences=False)),
+      tf.keras.layers.Dense(256, activation=activation),
       tf.keras.layers.Dropout(0.5),
       tf.keras.layers.Dense(self.ySize, activation='softmax')
     ])

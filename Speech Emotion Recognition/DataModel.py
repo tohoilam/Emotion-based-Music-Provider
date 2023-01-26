@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import pytz
 import cv2
 import random
+# import copy
 
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
@@ -42,6 +43,7 @@ class DataModel:
     self.mergeHappinessExcitement = mergeHappinessExcitement
     
     self.data = []
+    # self.audio = []
     self.labels = []
     self.sampling_rates = []
     self.test_data = []
@@ -497,6 +499,7 @@ class DataModel:
     thisData = data
     thisLabels = labels
     thisSR = sampling_rates
+    # self.audio = copy.deepcopy(thisData)
       
     print('')
     
@@ -516,10 +519,10 @@ class DataModel:
       # Extract Mel-Sectrogram
       if (self.transformByStft == True):
         mel_spec = librosa.feature.melspectrogram(y=x, sr=thisSR[i], hop_length=self.hop_length, win_length=self.win_length, n_mels=self.n_mels)
-        mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.max)
+        # mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.max)
       else:
         mel_spec = librosa.feature.melspectrogram(y=x, sr=thisSR[i])
-        mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.min)
+        # mel_spec = librosa.amplitude_to_db(mel_spec, ref=np.max)
 
         # Force Resize Mel-Spectrogram using image
         mel_spec = cv2.resize(mel_spec, self.dimension, interpolation=cv2.INTER_CUBIC)
