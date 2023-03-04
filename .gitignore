@@ -155,4 +155,4 @@ cython_debug/
 Speech Emotion Recognition/Data/
 Music_Generation/MEC_model/
 Music_Generation/data/
-Music_Generation/midi_data/
+# Music_Generation/midi_data/
