@@ -2,6 +2,7 @@ import numpy as np
 import math
 import pandas as pd
 import os
+import shutil
 import muspy #RMB INSTALL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 import warnings
 warnings.filterwarnings('ignore')
@@ -145,6 +146,11 @@ def prepare_xs(df):
             # pitch
             pitch_list.append(note.pitch)
 
+        if (len(notes_per_beat_list) == 0):
+            print("Empty notes per beat detected")
+            xs.append(None)
+            continue
+
         # construct feature set
         # density
         notes_per_beat_avg = sum(notes_per_beat_list) / len(notes_per_beat_list)
@@ -187,6 +193,9 @@ def prepare_xs(df):
     return xs
 
 def prepare_dataset(midi_file_folder_path, mode, sample_size=None):
+    if (not os.path.isabs(midi_file_folder_path)):
+        midi_file_folder_path = os.path.abspath(midi_file_folder_path)
+
     paths = []
     count = 0
 
@@ -217,6 +226,12 @@ def prepare_dataset(midi_file_folder_path, mode, sample_size=None):
     
     #construct xs and ys
     xs = prepare_xs(df)
+
+    # Removed None type midi
+    none_indices = [ i for i, element in enumerate(xs) if element == None ]    
+    xs = np.delete(xs, none_indices)
+    df = df.drop(none_indices)
+
     return df, xs
 
 def path_converter(path_windows): # To convert windows path string to usable format, used in defining model path
@@ -234,6 +249,10 @@ def _get_MIDI_features(df, xs):
     feature_dict_list = []
     # build dictionary
     for sample in xs:
+        if (sample == None):
+            feature_dict_list.append(None)
+            continue
+
         feature_dict = dict({'note_density_avg': sample[0],
                              'note_density_sd': sample[1],
                              'note_length_avg': sample[2],
@@ -262,6 +281,8 @@ def MEC_predict(model_path, midi_file_folder_path, mode, sample_size=None):
     return _MEC_predict(model_path, df, xs)
 
 def _MEC_predict(model_path, df, xs):
+    if (not os.path.isabs(model_path)):
+        model_path = os.path.abspath(model_path)
 
     xs_std = []
     samples_mean = [3.80456035, 1.66635806, 1.06050362, 0.90151069, 65.17817575, 11.93683611,
@@ -282,10 +303,10 @@ def _MEC_predict(model_path, df, xs):
     return ys_pred
 
 def get_info(model_path, midi_file_folder_path, mode, emotion_class, sample_size=None):
-    # emotion_class = ['Happiness', 'Angry', 'Sadness', 'Calmness']
-
     df, xs = prepare_dataset(path_converter(midi_file_folder_path), mode, sample_size=sample_size)
+    return _get_info(model_path, df, xs, mode, emotion_class)
 
+def _get_info(model_path, df, xs, mode, emotion_class):
     feature_dict_list = _get_MIDI_features(df, xs)
     ys_pred = _MEC_predict(model_path, df, xs)
     ys_class = [ np.argmax(ys) for ys in ys_pred ]
@@ -302,6 +323,37 @@ def get_info(model_path, midi_file_folder_path, mode, emotion_class, sample_size
             feature_dict_list[i]['emotion'] = emotion
 
     return feature_dict_list
+
+def move_midi_by_emotion(model_path, midi_file_folder_path, mode, emotion_class):
+    df, xs = prepare_dataset(path_converter(midi_file_folder_path), mode, sample_size=100)
+    midi_info = _get_info(model_path, df, xs, mode, emotion_class)
+
+    # Convert to absolute path
+    if (not os.path.isabs(model_path)):
+        model_path = os.path.abspath(model_path)
+    if (not os.path.isabs(midi_file_folder_path)):
+        midi_file_folder_path = os.path.abspath(midi_file_folder_path)
+
+    if (len(df) != len(midi_info)):
+        raise Exception("Dataframe size does not equals to midi_info size, please check MEC.py")
+
+    # Empty and Create a new folder for each emotion
+    for emotion in emotion_class:
+        dir_path = os.path.join(midi_file_folder_path, emotion)
+        shutil.rmtree(dir_path, ignore_errors=True) 
+        os.makedirs(dir_path, exist_ok=True)
+
+    for i in range(len(df)):
+        emotion = midi_info[i]['emotion']
+        original_path = df.iloc[[i]]['clip'].item()
+        filename = os.path.basename(original_path)
+        new_path = os.path.join(midi_file_folder_path, emotion, filename)
+
+        midi = df.iloc[[i]]['midi'].item()
+
+        dest = shutil.move(original_path, new_path)
+
+        
 
 
 
