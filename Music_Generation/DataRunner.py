@@ -17,3 +17,6 @@ args = parser.parse_args()
 if __name__ == "__main__":
   data = Data(args.dataset_dir, args.h5_matched_dir, args.midi_dir, args.match_scores_filepath, args.genre_list, args.sample_size)
   data.extract(args.pool_size, args.print_plot)
+
+# Example Usage
+# python3 DataRunner.py --dataset_dir="data/LAKH-MIDI-Dataset-Matched" --h5_matched_dir="data/LAKH-H5-Matched" --midi_dir="midi_data" --match_scores_filepath="data/match_scores.json" --genre_list="['pop']" --sample_size=10000 --pool_size=4
