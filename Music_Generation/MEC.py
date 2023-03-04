@@ -325,7 +325,7 @@ def _get_info(model_path, df, xs, mode, emotion_class):
     return feature_dict_list
 
 def move_midi_by_emotion(model_path, midi_file_folder_path, mode, emotion_class):
-    df, xs = prepare_dataset(path_converter(midi_file_folder_path), mode, sample_size=100)
+    df, xs = prepare_dataset(path_converter(midi_file_folder_path), mode)
     midi_info = _get_info(model_path, df, xs, mode, emotion_class)
 
     # Convert to absolute path
