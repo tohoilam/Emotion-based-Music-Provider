@@ -153,7 +153,7 @@ class Data:
 
   def extract_instrument(self, msd_id: str, instruments_list: list, instruments_type: str) -> List[PrettyMIDI]:
     # General MIDI Level 1 (Link: https://www.midi.org/specifications-old/item/gm-level-1-sound-set)
-    #   1 -   8 -> MIDI
+    #   1 -   8 -> Piano
     #   9 -  16 -> Chromatic Percussion
     #  17 -  24 -> Organ
     #  25 -  32 -> Guitar
