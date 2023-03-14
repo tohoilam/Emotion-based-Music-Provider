@@ -73,8 +73,8 @@ melody_rnn_train --config="attention_rnn" --run_dir="logdir/baseline_attention_m
 ```
 melody_rnn_generate \
 --config=attention_rnn \
---run_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/logdir/baseline_attention_model_3 \
---output_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/generation/Happiness/baseline_attention_model_3 \
+--run_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/logdir/angry_baseline_attention_model_1 \
+--output_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/generation/Happiness/angry_baseline_attention_model_1 \
 --num_outputs=10 \
 --num_steps=128 \
 --primer_melody="[60]" \
@@ -87,4 +87,28 @@ melody_rnn_generate \
 CUDA_VISIBLE_DEVICES=-1 melody_rnn_train --config="attention_rnn" --run_dir="logdir/baseline_attention_model_3" --sequence_example_file="training_input/Happiness/eval_melodies.tfrecord" --hparams="batch_size=64,rnn_layer_sizes=[64,64]" --num_training_steps=2000 --eval
 
 tensorboard --logdir="logdir/happiness_baseline_attention_model_1"
+```
+
+## Step 7: Pack Bundle
+
+```
+melody_rnn_generate \
+--config=attention_rnn \
+--run_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/logdir/angry_baseline_attention_model_1 \
+--hparams="batch_size=64,rnn_layer_sizes=[64,64]" \
+--bundle_file="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/mag_models/angry_baseline_attention_model_1.mag" \
+--save_generator_bundle
+```
+
+## Genererate from Bundle with Console
+
+```
+melody_rnn_generate \
+--config=attention_rnn \
+--output_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/generation/Happiness/angry_baseline_attention_model_1 \
+--num_outputs=10 \
+--num_steps=128 \
+--primer_melody="[60]" \
+--hparams="batch_size=64,rnn_layer_sizes=[64,64]" \
+--bundle_file="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/mag_models/angry_baseline_attention_model_1.mag"
 ```
