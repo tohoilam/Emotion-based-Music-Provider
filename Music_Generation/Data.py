@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import copy
 import glob
@@ -16,6 +17,8 @@ from typing import Optional, List, Dict
 from bokeh.colors.groups import purple as colors
 from pretty_midi import PrettyMIDI, program_to_instrument_class, Instrument
 from magenta.pipelines import pipeline
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials #To access authorised Spotify data
 
 from AtomicCounter import AtomicCounter
 
@@ -32,6 +35,11 @@ class Data:
   ALL_MIDI_PATHS = None
   MSD_SCORE: Dict
   LAST_FM_API_KEY: str = "aefb8c01606bdd01e4b3a246722ff119"
+
+  SPOTIFY_CLIENT_ID = '30640558229a45cdbb0524ba51dbfef2'
+  SPOTIFY_CLIENT_SECRET = '98d94144440347bb9dfeb4c0e169c33a'
+  client_credentials_manager = None
+  sp = None
 
 
   def __init__(self,
@@ -64,7 +72,7 @@ class Data:
       raise OSError(f"Match Scores file not found at {match_scores_filepath}")
     
     # Create a midi_dir if not exists and clean the directory
-    shutil.rmtree(self.MIDI_DIR, ignore_errors=True) 
+    # shutil.rmtree(self.MIDI_DIR, ignore_errors=True) 
     os.makedirs(self.MIDI_DIR, exist_ok=True)
 
     # Get all the midi paths
@@ -72,6 +80,9 @@ class Data:
 
     self.GENRE_LIST = genre_list
     self.SAMPLE_SIZE = sample_size
+
+    self.client_credentials_manager = SpotifyClientCredentials(client_id=self.SPOTIFY_CLIENT_ID, client_secret=self.SPOTIFY_CLIENT_SECRET)
+    self.sp = spotipy.Spotify(client_credentials_manager=self.client_credentials_manager) #spotify object to access API
 
 
   def get_genres(self, h5) -> Optional[List]:
@@ -87,17 +98,37 @@ class Data:
     json = response.json()
 
     if "error" in json:
-      raise Exception(f"Error in request for '{artist}' - '{title}': "
-                      f"'{json['message']}'")
+      # print(f"Error in request for '{artist}' - '{title}': "
+      #       f"'{json['message']}'")
+      
+      return None
     if "toptags" not in json:
-      raise Exception(f"Error in request for '{artist}' - '{title}': "
-                      f"no top tags")
+      # print(f"Error in request for '{artist}' - '{title}': "
+      #       f"no top tags")
+      
+      return None
     
     tags = [tag["name"] for tag in json["toptags"]["tag"]]
     tags = [tag.lower().strip() for tag in tags if tag]
 
     return tags
   
+  def get_genres_by_spotify(self, h5):
+    title = h5.root.metadata.songs.cols.title[0].decode("utf-8")
+    artist = h5.root.metadata.songs.cols.artist_name[0].decode("utf-8")
+
+    search_query = f"{title} {artist}"
+
+    result = self.sp.search(search_query)
+    track = result['tracks']['items'][0]
+
+    artist = self.sp.artist(track["artists"][0]["external_urls"]["spotify"])
+    album = self.sp.album(track["album"]["external_urls"]["spotify"])
+
+    # print(f"Found in Spotify instead for '{search_query}'")
+
+    return artist["genres"] + album["genres"]
+
   def get_instrument(self, msd_id) -> Optional[list]:
     midi_md5 = self.get_matched_midi_md5(msd_id, self.MSD_SCORE)
     midi_path = self.get_midi_path(msd_id, midi_md5, self.DATASET_DIR)
@@ -118,7 +149,7 @@ class Data:
 
   def extract_drums(self, msd_id: str) -> Optional[PrettyMIDI]:
     # Create and empty drums directory inside the midi directory
-    DRUMS_DIRECTORY = os.path.join(self.MIDI_DIR, "drums")
+    DRUMS_DIRECTORY = os.path.join(self.MIDI_DIR, "drums", "unclassified")
     os.makedirs(DRUMS_DIRECTORY, exist_ok=True)
 
     midi_md5 = self.get_matched_midi_md5(msd_id, self.MSD_SCORE)
@@ -172,7 +203,7 @@ class Data:
 
 
     # Create and empty instrument directory inside the midi directory
-    INSTRUMENT_DIRECTORY = os.path.join(self.MIDI_DIR, instruments_type)
+    INSTRUMENT_DIRECTORY = os.path.join(self.MIDI_DIR, instruments_type, "unclassified")
     os.makedirs(INSTRUMENT_DIRECTORY, exist_ok=True)
 
     midi_md5 = self.get_matched_midi_md5(msd_id, self.MSD_SCORE)
@@ -255,17 +286,21 @@ class Data:
         
         # Extract genres
         genres = self.get_genres(h5)
+
+        if (genres == None):
+          genres = self.get_genres_by_spotify(h5)
+
         if (self.GENRE_LIST != None):
           matching_genres = [genre for genre in genres if genre in self.GENRE_LIST]
           if not matching_genres:
-            return
+            raise Exception(f"No matchnig genres for {msd_id} with genres {genres}")
           genres = matching_genres
 
-        # Extract instruments
-        instruments = self.get_instrument(msd_id)
+        # # Extract instruments
+        # instruments = self.get_instrument(msd_id)
 
-        # Extract drums (returning pretty midi of drums)
-        pm_drums = self.extract_drums(msd_id)
+        # # Extract drums (returning pretty midi of drums)
+        # pm_drums = self.extract_drums(msd_id)
 
         # Extract pianos
         pm_pianos = self.extract_pianos(msd_id)
@@ -275,8 +310,6 @@ class Data:
           "artist": artist,
           "title": title,
           "genres": genres,
-          "instruments": instruments,
-          "pm_drums": pm_drums,
           "pm_pianos": pm_pianos
         }
       
@@ -305,7 +338,8 @@ class Data:
       results = []
       for msd_id in msd_ids:
         result = self.process(msd_id)
-        results.append(result)
+        if (result):
+          results.append(result)
 
     print("END")
     
