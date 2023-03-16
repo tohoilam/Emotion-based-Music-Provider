@@ -23,7 +23,7 @@
 Filter MIDI file by genre, emotion, instruments, and other information.
 
 ```
-python3 DataRunner.py --dataset_dir="data/LAKH-MIDI-Dataset-Matched" --h5_matched_dir="data/LAKH-H5-Matched" --midi_dir="midi_data" --match_scores_filepath="data/match_scores.json" --genre_list="['pop']" --sample_size=10000 --pool_size=4
+python3 DataRunner.py --dataset_dir="data/LAKH-MIDI-Dataset-Matched" --h5_matched_dir="data/LAKH-H5-Matched" --midi_dir="midi_data" --match_scores_filepath="data/match_scores.json" --genre_list="['pop']" --pool_size=4
 ```
 
 * Note: `--pool_size=1` means no threading
@@ -33,13 +33,13 @@ python3 DataRunner.py --dataset_dir="data/LAKH-MIDI-Dataset-Matched" --h5_matche
 Pack `MIDI` data to `NoteSequence` data
 
 ```
-convert_dir_to_note_sequences --input_dir="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/midi_data/pianos/Happiness" --output_file="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/training_input/happiness_notesequences.tfrecord"
+convert_dir_to_note_sequences --input_dir="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/midi_data/pianos/Calmness" --output_file="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/training_input/all_calmness_notesequences.tfrecord"
 ```
 
 
 ## Step 3 : From NoteSequence to Training Input (training_melodies.tfrecord)
 ```
-python3 melody_rnn_pipeline.py --input="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/training_input/happiness_notesequences.tfrecord" --output_dir="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/training_input/Happiness" --config="attention_rnn"
+python3 melody_rnn_pipeline.py --input="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/training_input/all_happiness_notesequences.tfrecord" --output_dir="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/training_input/attention_rnn/original/Happiness" --config="attention_rnn"
 ```
 
 Will Generate...
@@ -57,6 +57,8 @@ Will Generate...
 ## Step 4 : Train
 ```
 melody_rnn_train --config="attention_rnn" --run_dir="logdir/baseline_attention_model_3" --sequence_example_file="training_input/Happiness/training_melodies.tfrecord" --hparams="batch_size=64,rnn_layer_sizes=[64,64]" --num_training_steps=20000
+
+melody_rnn_train --config="attention_rnn" --run_dir="logdir/test_model" --sequence_example_file="training_input/Happiness/training_melodies.tfrecord" --hparams="batch_size=64,rnn_layer_sizes=[64,64]" --num_training_steps=200
 ```
 
 
@@ -73,8 +75,8 @@ melody_rnn_train --config="attention_rnn" --run_dir="logdir/baseline_attention_m
 ```
 melody_rnn_generate \
 --config=attention_rnn \
---run_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/logdir/baseline_attention_model_3 \
---output_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/generation/Happiness/baseline_attention_model_3 \
+--run_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/logdir/angry_baseline_attention_model_1 \
+--output_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/generation/Happiness/angry_baseline_attention_model_1 \
 --num_outputs=10 \
 --num_steps=128 \
 --primer_melody="[60]" \
@@ -87,4 +89,28 @@ melody_rnn_generate \
 CUDA_VISIBLE_DEVICES=-1 melody_rnn_train --config="attention_rnn" --run_dir="logdir/baseline_attention_model_3" --sequence_example_file="training_input/Happiness/eval_melodies.tfrecord" --hparams="batch_size=64,rnn_layer_sizes=[64,64]" --num_training_steps=2000 --eval
 
 tensorboard --logdir="logdir/happiness_baseline_attention_model_1"
+```
+
+## Step 7: Pack Bundle
+
+```
+melody_rnn_generate \
+--config=attention_rnn \
+--run_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/logdir/angry_baseline_attention_model_1 \
+--hparams="batch_size=64,rnn_layer_sizes=[64,64]" \
+--bundle_file="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/mag_models/angry_baseline_attention_model_1.mag" \
+--save_generator_bundle
+```
+
+## Genererate from Bundle with Console
+
+```
+melody_rnn_generate \
+--config=attention_rnn \
+--output_dir=/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/generation/Happiness/angry_baseline_attention_model_1 \
+--num_outputs=10 \
+--num_steps=128 \
+--primer_melody="[60]" \
+--hparams="batch_size=64,rnn_layer_sizes=[64,64]" \
+--bundle_file="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/mag_models/angry_baseline_attention_model_1.mag"
 ```

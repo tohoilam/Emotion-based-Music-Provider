@@ -228,9 +228,10 @@ def prepare_dataset(midi_file_folder_path, mode, sample_size=None):
     xs = prepare_xs(df)
 
     # Removed None type midi
-    none_indices = [ i for i, element in enumerate(xs) if element == None ]    
-    xs = np.delete(xs, none_indices)
-    df = df.drop(none_indices)
+    none_indices = [ i for i, element in enumerate(xs) if element == None ]   
+    if (none_indices):
+        xs = np.delete(xs, none_indices)
+        df = df.drop(none_indices)
 
     return df, xs
 
@@ -313,14 +314,23 @@ def _get_info(model_path, df, xs, mode, emotion_class):
     
 
     if (mode == 0):
-        feature_dict_list['emotion_percentages'] = ys_pred
+        path = df.iloc[[0]]['clip'].item()
+
+        feature_dict_list['emotion_percentages'] = ys_pred.tolist()
         feature_dict_list['emotion'] = emotion
+        feature_dict_list['filename'] = os.path.basename(path)
+        feature_dict_list['file_path'] = path
     elif (mode == 1):
         for i in range(len(feature_dict_list)):
-            feature_dict_list[i]['emotion_percentages'] = ys_pred[i]
+            path = df.iloc[[i]]['clip'].item()
+
+            feature_dict_list[i]['emotion_percentages'] = ys_pred[i].tolist()
 
             emotion = emotion_class[ys_class[i]]
             feature_dict_list[i]['emotion'] = emotion
+
+            feature_dict_list[i]['filename'] = os.path.basename(path)
+            feature_dict_list[i]['file_path'] = path
 
     return feature_dict_list
 
