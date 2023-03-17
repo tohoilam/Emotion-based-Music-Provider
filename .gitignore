@@ -160,3 +160,4 @@ Music_Generation/logdir/
 
 Music_Generation/rnn_model_config.py
 Music_Generation/rnn_model_train.py
+Music_Generation/training_input/Command.txt
