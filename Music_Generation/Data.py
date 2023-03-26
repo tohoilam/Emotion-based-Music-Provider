@@ -181,6 +181,16 @@ class Data:
     PIANO_PROGRAMS = list(range(0, 8))
     INSTRUMENTS_TYPE = "pianos"
     return self.extract_instrument(msd_id, PIANO_PROGRAMS, INSTRUMENTS_TYPE)
+  
+  def extract_guitar(self, msd_id: str) -> List[PrettyMIDI]:
+    GUITAR_INSTRUMENT = list(range(24, 32))
+    INSTRUMENTS_TYPE = "guitars"
+    return self.extract_instrument(msd_id, GUITAR_INSTRUMENT, INSTRUMENTS_TYPE)
+  
+  def extract_ensemble(self, msd_id: str) -> List[PrettyMIDI]:
+    ENSEMBLE_INSTRUMENT = list(range(48, 56))
+    INSTRUMENTS_TYPE = "ensembles"
+    return self.extract_instrument(msd_id, ENSEMBLE_INSTRUMENT, INSTRUMENTS_TYPE)
 
   def extract_instrument(self, msd_id: str, instruments_list: list, instruments_type: str) -> List[PrettyMIDI]:
     # General MIDI Level 1 (Link: https://www.midi.org/specifications-old/item/gm-level-1-sound-set)
@@ -303,7 +313,8 @@ class Data:
         # pm_drums = self.extract_drums(msd_id)
 
         # Extract pianos
-        pm_pianos = self.extract_pianos(msd_id)
+        pm_pianos = self.extract_guitar(msd_id)
+        pm_pianos = self.extract_ensemble(msd_id)
 
         return {
           "msd_id": msd_id,

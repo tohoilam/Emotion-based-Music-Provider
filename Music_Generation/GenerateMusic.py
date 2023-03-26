@@ -6,6 +6,7 @@ import magenta.music as mm
 
 from magenta.music import DEFAULT_QUARTERS_PER_MINUTE
 from magenta.models.melody_rnn import melody_rnn_sequence_generator
+from magenta.music import constants
 
 from note_seq.protobuf.music_pb2 import NoteSequence
 from note_seq.protobuf.generator_pb2 import GeneratorOptions
@@ -173,34 +174,28 @@ def prepare_primers_midi(midi_path: str, save_dir: str, num_of_primers: int = 10
   if (not os.path.isabs(save_dir)):
     save_dir = os.path.abspath(save_dir)
 
-  filename = os.path.basename(midi_path)[:-4]
+  filename = os.path.basename(midi_path)
+  save_path = os.path.join(save_dir, filename)
 
-  pm = PrettyMIDI(midi_path)
+  midi_file = mm.midi_file_to_note_sequence(midi_path)
 
-  if (len(pm.instruments) != 1):
-    print(f"Warning: Number of instruments is {len(pm.instruments)}")
+  # Ignore multi tempos midi
+  if (len(midi_file.tempos) > 1):
+    return None
 
-  instrument = pm.instruments[0]
+  # Trimmed Sequence
+  start_time = midi_file.notes[0].start_time
+  max_time = midi_file.notes[-1].end_time
+  seconds_per_step = 60.0 / midi_file.tempos[0].qpm / constants.DEFAULT_STEPS_PER_QUARTER
+  end_time = (seconds_per_step * num_of_primers) + start_time
+  if (end_time > max_time):
+    end_time = max_time
 
-  if instrument.is_drum:
-    print("Warning: Instrument is drum, please change to non-drum instruments")
+  trimmed_seq = mm.extract_subsequence(midi_file, start_time=start_time, end_time=end_time)
 
-  pm_piano = copy.deepcopy(pm)
-  pm_piano_instrument = Instrument(program=instrument.program)
-  pm_piano.instruments = [pm_piano_instrument]
+  mm.sequence_proto_to_midi_file(trimmed_seq, save_path)
 
-  count = 0
-  for note in instrument.notes:
-    pm_piano_instrument.notes.append(note)
-    count += 1
-    if (count >= num_of_primers):
-      break
+  print(f"New primers midi prepared at {save_path}")
 
-  new_pm_path = os.path.join(save_dir, f"{filename}_primer_{num_of_primers}.mid")
-
-  pm_piano.write(new_pm_path)
-
-  print(f"New primers midi prepared at {new_pm_path}")
-
-  return new_pm_path
+  return save_path
 

@@ -33,7 +33,7 @@ python3 DataRunner.py --dataset_dir="data/LAKH-MIDI-Dataset-Matched" --h5_matche
 Pack `MIDI` data to `NoteSequence` data
 
 ```
-convert_dir_to_note_sequences --input_dir="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/midi_data/pianos/Calmness" --output_file="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/training_input/all_calmness_notesequences.tfrecord"
+convert_dir_to_note_sequences --input_dir="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/midi_data/guitars/Sadness" --output_file="/Users/alexto/Documents/ProgrammingProjects/Emotion-based-Music-Provider/Music_Generation/training_input/pianosAndGuitars_sadness_notesequences.tfrecord"
 ```
 
 
