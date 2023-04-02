@@ -1,6 +1,6 @@
-melody_rnn_train --config="attention_rnn" --run_dir="logdir/attention_64x64_happiness" --sequence_example_file="training_input/AttentionRNN_128x128_Happiness/training_melodies.tfrecord" --hparams="batch_size=64,rnn_layer_sizes=[64,64]" --num_training_steps=10000
+melody_rnn_train --config="attention_rnn" --run_dir="logdir/attention_256x256_happiness_full" --sequence_example_file="training_input/attention_rnn/original/Happiness/training_melodies.tfrecord" --hparams="batch_size=40,rnn_layer_sizes=[256,256]" --num_training_steps=5000
 
-melody_rnn_train --config="attention_rnn" --run_dir="logdir/attention_64x64_happiness" --sequence_example_file="training_input/AttentionRNN_128x128_Happiness/eval_melodies.tfrecord" --hparams="batch_size=64,rnn_layer_sizes=[64,64]" --num_training_steps=10000 --eval
+melody_rnn_train --config="attention_rnn" --run_dir="logdir/attention_256x256_happiness_full" --sequence_example_file="training_input/attention_rnn/original/Happiness/eval_melodies.tfrecord" --hparams="batch_size=40,rnn_layer_sizes=[256,256]" --num_training_steps=5000 --eval
 
 python melody_rnn_pipeline.py --input="training_input/all_happiness_notesequences.tfrecord" --output_dir="training_input/LookbackRNN_256x256_Happiness_Full" --config="lookback_rnn"
 

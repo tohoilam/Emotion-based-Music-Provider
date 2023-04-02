@@ -158,6 +158,7 @@ Music_Generation/data/
 Music_Generation/midi_data/
 Music_Generation/logdir/
 Music_Generation/performanceRNN/
+Music_Generation/polyphonicRNN/
 
 Music_Generation/rnn_model_config.py
 Music_Generation/rnn_model_train.py
