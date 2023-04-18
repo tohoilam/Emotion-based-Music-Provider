@@ -11,11 +11,12 @@ from MEC import MEC_predict, get_MIDI_features
 #   waveform_short = waveform[:seconds*_SAMPLING_RATE]
 #   return display.Audio(waveform_short, rate=_SAMPLING_RATE)
 
-def play_audio(pm: PrettyMIDI, seconds=30, sampling_rate=16000):
+def play_audio(pm: PrettyMIDI, seconds=None, sampling_rate=16000):
   waveform = pm.fluidsynth(fs=sampling_rate)
   # Take a sample of the generated waveform to mitigate kernel resets
-  waveform_short = waveform[:seconds * sampling_rate]
-  return display.Audio(waveform_short, rate=sampling_rate)
+  if (seconds):
+    waveform = waveform[:seconds * sampling_rate]
+  return display.Audio(waveform, rate=sampling_rate)
 
 def midi_show_notebook(pm: PrettyMIDI):
   preset = Preset(plot_width=850)
