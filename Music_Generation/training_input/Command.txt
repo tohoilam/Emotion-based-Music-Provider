@@ -1,9 +1,11 @@
-melody_rnn_train --config="attention_rnn" --run_dir="logdir/attention_256x256_happiness_full" --sequence_example_file="training_input/attention_rnn/original/Happiness/training_melodies.tfrecord" --hparams="batch_size=40,rnn_layer_sizes=[256,256]" --num_training_steps=5000
+melody_rnn_train --config="attention_rnn" --run_dir="logdir/attention_128x128_calmness_full" --sequence_example_file="training_input/attention_rnn/original/Happiness/training_melodies.tfrecord" --hparams="batch_size=64,rnn_layer_sizes=[128,128], dropout_keep_prob=0.4" --num_training_steps=5000
 
-melody_rnn_train --config="attention_rnn" --run_dir="logdir/attention_256x256_happiness_full" --sequence_example_file="training_input/attention_rnn/original/Happiness/eval_melodies.tfrecord" --hparams="batch_size=40,rnn_layer_sizes=[256,256]" --num_training_steps=5000 --eval
+melody_rnn_train --config="attention_rnn" --run_dir="logdir/attention_128x128_calmness_full" --sequence_example_file="training_input/attention_rnn/original/Happiness/eval_melodies.tfrecord" --hparams="batch_size=64,rnn_layer_sizes=[128,128], dropout_keep_prob=0.4" --num_training_steps=5000 --eval
 
 python melody_rnn_pipeline.py --input="training_input/all_happiness_notesequences.tfrecord" --output_dir="training_input/LookbackRNN_256x256_Happiness_Full" --config="lookback_rnn"
 
 SET CUDA_VISIBLE_DEVICES=""
 
-melody_rnn_generate --config="lookback_rnn" --run_dir="logdir/lookback_128x128_happiness_full" --hparams="batch_size=64,rnn_layer_sizes=[128,128]" --bundle_file="mag_models/lookback_128x128_happiness_full.mag" --save_generator_bundle
+melody_rnn_generate --config="attention_rnn" --output_dir="generation\final\trial" --num_outputs=10 --num_steps=256 --primer_midi="primers\Calmness\TRGOELO12903CED776_2.mid" --hparams="batch_size=64,rnn_layer_sizes=[64,64]" --bundle_file="mag_models/attention_64x64_calmness_full.mag"
+
+jupyter notebook --NotebookApp.allow_origin='https://colab.research.google.com' --port=8888 --NotebookApp.port_retries=0

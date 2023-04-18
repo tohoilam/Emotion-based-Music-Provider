@@ -228,10 +228,10 @@ def prepare_dataset(midi_file_folder_path, mode, sample_size=None):
     xs = prepare_xs(df)
 
     # Removed None type midi
-    none_indices = [ i for i, element in enumerate(xs) if element == None ]   
-    if (none_indices):
-        xs = np.delete(xs, none_indices)
-        df = df.drop(none_indices)
+    #none_indices = [ i for i, element in enumerate(xs) if element == None ]   
+    #if (none_indices):
+        #xs = np.delete(xs, none_indices)
+        #df = df.drop(none_indices)
 
     return df, xs
 
@@ -250,9 +250,9 @@ def _get_MIDI_features(df, xs):
     feature_dict_list = []
     # build dictionary
     for sample in xs:
-        if (sample == None):
-            feature_dict_list.append(None)
-            continue
+        #if (sample == None):
+            #feature_dict_list.append(None)
+            #continue
 
         feature_dict = dict({'note_density_avg': sample[0],
                              'note_density_sd': sample[1],
